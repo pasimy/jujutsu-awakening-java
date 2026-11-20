@@ -98,6 +98,12 @@ public class BedrockEntity extends PathfinderMob {
 	protected BedrockEntity(EntityType<? extends PathfinderMob> type, Level level) {
 		super(type, level);
 		setPersistenceRequired();
+		// Java's look control levels a mob's pitch every tick; the add-on aims its orbs with "tp ... facing" and flies them
+		// with "tp ^^^", so they have to keep the pitch they were given (Phase Red looking up)
+		lookControl = new net.minecraft.world.entity.ai.control.LookControl(this) {
+			@Override
+			protected boolean resetXRotOnTick() { return false; }
+		};
 	}
 
 	public EntityDef def() {
@@ -139,9 +145,14 @@ public class BedrockEntity extends PathfinderMob {
 		JsonObject follow = a.component("minecraft:follow_range");
 		if (follow != null) set(Attributes.FOLLOW_RANGE, range(follow.get("value")));
 		JsonObject physics = a.component("minecraft:physics");
-		boolean gravity = physics == null || !physics.has("has_gravity") || physics.get("has_gravity").getAsBoolean();
-		boolean collide = physics == null || !physics.has("has_collision") || physics.get("has_collision").getAsBoolean();
-		setNoGravity(!gravity || c.has("minecraft:can_fly") || c.has("minecraft:navigation.fly") || c.has("minecraft:navigation.hover"));
+		// Bedrock: an entity without minecraft:physics has no gravity and no block collision (the add-on's orbs and markers
+		// rely on it to hang in the air)
+		boolean gravity = physics != null && (!physics.has("has_gravity") || physics.get("has_gravity").getAsBoolean());
+		boolean collide = physics != null && (!physics.has("has_collision") || physics.get("has_collision").getAsBoolean());
+		boolean floats = !gravity || c.has("minecraft:can_fly") || c.has("minecraft:navigation.fly") || c.has("minecraft:navigation.hover");
+		// (and drop the fall it picked up on its first tick, before its components were read)
+		if (floats && !isNoGravity()) setDeltaMovement(getDeltaMovement().multiply(1, 0, 1));
+		setNoGravity(floats);
 		noPhysics = !collide;
 		JsonObject sc = a.component("minecraft:scale");
 		scale = sc != null && sc.has("value") ? (float) range(sc.get("value")) : 1f;
