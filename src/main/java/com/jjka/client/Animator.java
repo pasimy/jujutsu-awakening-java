@@ -39,7 +39,7 @@ public final class Animator implements Molang.Scope {
 	static final class Inst {
 		final Anim anim;
 		double time, delay;
-		boolean done, completed;
+		boolean done, completed, started;
 
 		Inst(Anim a) { anim = a; }
 	}
@@ -110,6 +110,9 @@ public final class Animator implements Molang.Scope {
 		JsonElement s = desc.getAsJsonObject("scripts").get("scale");
 		return s == null ? 1 : Molang.eval(s, this);
 	}
+
+	/** stops long poses (a domain's hand sign holds for its whole 38 seconds) once they've run this long */
+	void endLongPoses(double seconds) { runtime.removeIf(r -> r.inst.time > seconds && r.inst.anim.length > seconds + 2); }
 
 	// ------------------------------------------------------------------ playanimation
 	public void play(String anim, String next, float blendOut, String stop, String controller) {
@@ -239,6 +242,8 @@ public final class Animator implements Molang.Scope {
 	private void advance(Inst i) {
 		Anim a = i.anim;
 		double prev = i.time;
+		// the first frame includes time 0: effects keyed at "0.0" (most of the add-on's orbs and auras) go off too
+		if (!i.started) { i.started = true; prev = -1e-9; }
 		if (a.timeUpdate != null) { animTime = i.time; i.time = Molang.num(a.timeUpdate.eval(this)); }
 		else i.time += deltaTime;
 		if (a.length > 0 && i.time >= a.length) {

@@ -155,7 +155,18 @@ public final class Keys {
 	public static void interact(InputEvent.InteractionKeyMappingTriggered e) {
 		Minecraft mc = Minecraft.getInstance();
 		boolean jump = mc.options.keyJump.isDown();
-		if (e.isAttack()) { Net.CHANNEL.sendToServer(new Net.Input(jump, false, true, false)); return; }
+		if (e.isAttack()) {
+			// during the add-on's cutscene camera the crosshair can land on yourself (or on an item / arrow): attacking that
+			// gets you kicked ("attempting to attack an invalid entity"), so only the add-on's punch goes through
+			if (mc.hitResult instanceof net.minecraft.world.phys.EntityHitResult h && (Screen.camOn() || h.getEntity() == mc.player
+					|| h.getEntity() instanceof net.minecraft.world.entity.item.ItemEntity || h.getEntity() instanceof net.minecraft.world.entity.ExperienceOrb
+					|| h.getEntity() instanceof net.minecraft.world.entity.projectile.AbstractArrow)) {
+				e.setCanceled(true);
+				e.setSwingHand(true);
+			}
+			Net.CHANNEL.sendToServer(new Net.Input(jump, false, true, false));
+			return;
+		}
 		if (!e.isUseItem()) return;
 		boolean free = mc.player != null && mc.player.getMainHandItem().isEmpty();
 		if (active() || free) {

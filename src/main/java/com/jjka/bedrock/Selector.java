@@ -265,7 +265,8 @@ public final class Selector {
 		for (String[] f : families) if (f[1].isEmpty() != Actor.families(e).contains(f[0])) return false;
 		for (String[] n : names) {
 			String name = e instanceof Player p ? p.getGameProfile().getName() : e.hasCustomName() ? e.getCustomName().getString() : e.getName().getString();
-			if (n[1].isEmpty() != name.equals(n[0])) return false;
+			// Bedrock compares names ignoring case (the add-on relies on it: "LImitlessPTRG")
+			if (n[1].isEmpty() != name.equalsIgnoreCase(n[0])) return false;
 		}
 		for (String[] m : modes) {
 			if (!(e instanceof ServerPlayer p)) return false;

@@ -39,6 +39,8 @@ public final class PlayerAnims {
 			root = waist = bodyPose = null;
 			Animator a = Animator.peek(p);
 			if (a == null) return;
+			// walking or punching ends a long held pose (Unlimited Void's sign would otherwise stay up after the cutscene)
+			if (limbAmount > 0.2f || attackTime > 0) a.endLongPoses(3);
 			float partial = net.minecraft.client.Minecraft.getInstance().getFrameTime();
 			Map<String, float[]> pose;
 			try { pose = a.frame(partial); } catch (Throwable ex) { com.jjka.bedrock.Bedrock.warnOnce("anim", "Player animation failed: " + ex); return; }

@@ -582,7 +582,11 @@ public final class Particles {
 			JsonObject dm = bb.getAsJsonObject("direction");
 			if (dm.has("mode") && dm.get("mode").getAsString().equals("custom") && dm.has("custom_direction")) { float[] v = vec(dm.get("custom_direction"), p.s, 0); dirv = p.em.turn(new Vec3(v[0], v[1], v[2])); }
 		}
-		Vector3f dir = dirv.lengthSqr() < 1e-8 ? new Vector3f(0, 1, 0) : new Vector3f((float) dirv.x, (float) dirv.y, (float) dirv.z).normalize();
+		// a particle that isn't moving has no direction to line up with: Bedrock then shows it facing the camera (most of
+		// the add-on's glowing orbs are still "direction_z" particles from a point emitter)
+		boolean still = dirv.lengthSqr() < 1e-8;
+		if (still && (mode.startsWith("direction") || mode.equals("lookat_direction"))) mode = "rotate_xyz";
+		Vector3f dir = still ? new Vector3f(0, 1, 0) : new Vector3f((float) dirv.x, (float) dirv.y, (float) dirv.z).normalize();
 		switch (mode) {
 			case "rotate_y", "lookat_y" -> {
 				Vector3f flat = new Vector3f(toCam.x, 0, toCam.z);
