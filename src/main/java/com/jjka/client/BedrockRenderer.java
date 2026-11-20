@@ -66,6 +66,9 @@ public class BedrockRenderer extends EntityRenderer<BedrockEntity> {
 		final Animator a;
 		final JsonObject desc, rc;
 
+		/** which of the controller's arrays is being looked up: geometries, textures or materials */
+		String group;
+
 		RenderScope(Animator a, JsonObject desc, JsonObject rc) { this.a = a; this.desc = desc; this.rc = rc; }
 
 		@Override public Object query(String name, Object[] args) { return a.query(name, args); }
@@ -82,7 +85,10 @@ public class BedrockRenderer extends EntityRenderer<BedrockEntity> {
 				case "material": return lookup(desc, "materials", key);
 				case "array": {
 					if (rc == null || !rc.has("arrays")) return null;
-					for (var group : rc.getAsJsonObject("arrays").entrySet()) {
+					// geometries / textures / materials can each have an Array.variants: the one being looked up comes first
+					List<Map.Entry<String, JsonElement>> groups = new ArrayList<>(rc.getAsJsonObject("arrays").entrySet());
+					if (group != null) groups.sort((x, y) -> Boolean.compare(!x.getKey().equalsIgnoreCase(group), !y.getKey().equalsIgnoreCase(group)));
+					for (var group : groups) {
 						for (var arr : group.getValue().getAsJsonObject().entrySet()) {
 							if (!arr.getKey().equalsIgnoreCase("array." + key)) continue;
 							List<Object> out = new ArrayList<>();
@@ -172,13 +178,21 @@ public class BedrockRenderer extends EntityRenderer<BedrockEntity> {
 		ps.scale(-1, -1, 1);
 		ps.translate(0, -1.501f, 0);
 		int overlay = e instanceof LivingEntity l ? LivingEntityRenderer.getOverlayCoords(l, 0) : OverlayTexture.NO_OVERLAY;
+		controllers(an, desc, rcs, pose, ps, buffers, light, overlay);
+		ps.popPose();
+	}
+
+	/** Draws render controllers' geometry in the current model space (Java model pixels, y down from 24) */
+	static void controllers(Animator an, JsonObject desc, List<JsonObject> rcs, Map<String, float[]> pose, PoseStack ps, MultiBufferSource buffers, int light, int overlay) {
 		Vec3 cam = Minecraft.getInstance().gameRenderer.getMainCamera().getPosition();
 		for (JsonObject rc : rcs) {
 			RenderScope s = new RenderScope(an, desc, rc);
+			s.group = "geometries";
 			Object geoName = Molang.compile(rc.has("geometry") ? rc.get("geometry").getAsString() : "Geometry.default").eval(s);
 			Geo geo = Geo.get(geoName instanceof String str ? str : null);
 			if (geo == null) continue;
 			String texName = null;
+			s.group = "textures";
 			if (rc.has("textures") && rc.getAsJsonArray("textures").size() > 0) {
 				Object t = Molang.compile(rc.getAsJsonArray("textures").get(0).getAsString()).eval(s);
 				if (t instanceof String str) texName = str;
@@ -189,6 +203,7 @@ public class BedrockRenderer extends EntityRenderer<BedrockEntity> {
 			// materials per bone (later entries win), visibility per bone
 			List<String[]> mats = new ArrayList<>();
 			if (rc.has("materials")) for (JsonElement m : rc.getAsJsonArray("materials")) for (var en : m.getAsJsonObject().entrySet()) {
+				s.group = "materials";
 				Object v = Molang.compile(en.getValue().getAsString()).eval(s);
 				mats.add(new String[] { en.getKey(), v instanceof String str ? str : null });
 			}
@@ -202,7 +217,6 @@ public class BedrockRenderer extends EntityRenderer<BedrockEntity> {
 			Map<String, Boolean> glow = new HashMap<>();
 			for (Geo.Bone b : geo.bones) if (b.parent == null) bone(b, geo, pose, ps, buffers, light, overlay, tex, mats, vis, types, glow, color, true, an, cam);
 		}
-		ps.popPose();
 	}
 
 	private static float ch(JsonObject c, String k, Molang.Scope s) { return c.has(k) ? (float) Molang.eval(c.get(k), s) : 1f; }

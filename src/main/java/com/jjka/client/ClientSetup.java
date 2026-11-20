@@ -67,8 +67,15 @@ public final class ClientSetup {
 			try {
 				ObfuscationReflectionHelper.setPrivateValue(LivingEntityRenderer.class, r, model, "f_115290_");
 			} catch (RuntimeException ex) {
-				com.jjka.bedrock.Bedrock.LOG.error("Couldn't swap the player model; player animations won't show", ex);
+				// unmapped (dev) names: find the model field by its type
+				try {
+					for (java.lang.reflect.Field f : LivingEntityRenderer.class.getDeclaredFields())
+						if (net.minecraft.client.model.EntityModel.class.isAssignableFrom(f.getType())) { f.setAccessible(true); f.set(r, model); }
+				} catch (ReflectiveOperationException ex2) {
+					com.jjka.bedrock.Bedrock.LOG.error("Couldn't swap the player model; player animations won't show", ex);
+				}
 			}
+			r.addLayer(new PlayerLayer(r));
 		}
 	}
 }

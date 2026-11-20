@@ -160,8 +160,14 @@ public final class Animator implements Molang.Scope {
 			animTime = r.inst.time;
 			r.inst.anim.apply(this, r.inst.time, 1f, pose);
 		}
+		last = pose;
 		return pose;
 	}
+
+	private Map<String, float[]> last = new LinkedHashMap<>();
+
+	/** the pose the last frame() worked out */
+	public Map<String, float[]> lastPose() { return last; }
 
 	private void run(String key, float w, Map<String, float[]> pose) {
 		String id = names.getOrDefault(key, key);

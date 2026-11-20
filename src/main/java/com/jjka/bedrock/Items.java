@@ -245,6 +245,8 @@ public final class Items {
 	}
 
 	// ------------------------------------------------------------------ give / clear / replaceitem
+	private static final Map<java.util.UUID, Integer> SELECTED_AT = new java.util.concurrent.ConcurrentHashMap<>();
+
 	static Commands.Cmd give(Commands.R r) {
 		Commands.Target t = r.target();
 		String id = Bedrock.id(r.word());
@@ -259,7 +261,15 @@ public final class Items {
 			for (Entity e : t.entities(c)) if (e instanceof ServerPlayer p) {
 				if ((locked || style(id)) && item instanceof BedrockItem) {
 					Bar b = bar(p);
-					if (!b.items.contains(id) || item.getMaxStackSize() > 1) b.items.add(id);
+					if (!b.items.contains(id) || item.getMaxStackSize() > 1) {
+						b.items.add(id);
+						// a newly given technique is the one you use (Sukuna taking over hands you his moves): the first of
+						// the tick's batch, so a function giving several doesn't land on the last
+						if (!style(id) && !id.equals("ds:dash") && !Moves.of(id).isEmpty() && SELECTED_AT.getOrDefault(p.getUUID(), -1) != p.server.getTickCount()) {
+							SELECTED_AT.put(p.getUUID(), p.server.getTickCount());
+							b.selected = b.items.size() - 1;
+						}
+					}
 					if (style(id)) b.style = id; // a new fighting style is the one you use
 					saveBar(p);
 				} else {

@@ -71,6 +71,7 @@ def main(bp, rp, out='src/main/resources'):
         for n in names:
             src = os.path.join(root, n); rel = os.path.relpath(src, bp)
             if n.lower() == 'pack_icon.png': continue
+            rel = rel.replace('!', '_')  # '!' breaks resource lookups inside a jar (jar:...!/ URLs)
             dst = os.path.join(res_bp, rel); os.makedirs(os.path.dirname(dst), exist_ok=True); shutil.copy2(src, dst)
             files.append('bp/' + rel.replace('\\', '/'))
     seen = {}
@@ -90,6 +91,7 @@ def main(bp, rp, out='src/main/resources'):
                 seen[key] = rel
                 dst = os.path.join(assets, key)
             else:
+                rel = rel.replace('!', '_')  # '!' breaks resource lookups inside a jar (jar:...!/ URLs)
                 dst = os.path.join(res_rp, rel)
                 files.append('rp/' + rel)
             os.makedirs(os.path.dirname(dst), exist_ok=True); shutil.copy2(src, dst)

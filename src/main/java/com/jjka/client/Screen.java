@@ -238,6 +238,8 @@ public final class Screen {
 		else if (id.equals(VanillaGuiOverlay.ITEM_NAME.id())) el = "item_text";
 		else if (id.equals(VanillaGuiOverlay.MOUNT_HEALTH.id())) el = "horse_health";
 		if (el != null && (HIDDEN.contains(el) || HIDDEN.contains("all"))) e.setCanceled(true);
+		// a cutscene camera (camera set minecraft:free) shows the scene only, like on Bedrock
+		if (el != null && camOn()) e.setCanceled(true);
 		// the technique bar takes the hotbar's place in technique mode
 		if (id.equals(VanillaGuiOverlay.HOTBAR.id()) && Keys.bar.on && !Keys.bar.items.isEmpty()) e.setCanceled(true);
 	}
@@ -373,12 +375,15 @@ public final class Screen {
 			if (!subtitle.isEmpty()) for (String l : subtitle.split("\n")) { line(g, font, l, w / 2, y + 4, 1f, ta); y += 10; }
 		}
 		float aa = titleAlpha(actionAt, 0, 50, 10);
-		if (aa > 0 && !actionbar.isEmpty()) {
+		// the add-on's stats readout (energy / health / level) rides the actionbar; a cutscene camera hides it like the rest
+		// of the HUD, while story text on the actionbar (the menu intro) still shows
+		boolean statsLine = actionbar.contains("Cursed Energy") && actionbar.contains("Level");
+		if (aa > 0 && !actionbar.isEmpty() && !(statsLine && camOn())) {
 			String[] lines = actionbar.split("\n", -1);
 			int y = h - 68 - (lines.length - 1) * 10;
 			for (String l : lines) { line(g, font, l, w / 2, y, 1f, aa); y += 10; }
 		}
-		Keys.drawBar(g, w, h);
+		if (!camOn()) Keys.drawBar(g, w, h);
 	}
 
 	private static void impact(GuiGraphics g, int w, int h) {

@@ -2404,7 +2404,7 @@ bp/items/c_idle_transfig/instant_armour.json
 bp/items/c_idle_transfig/instant_body_combat.json
 bp/items/cursedenergy.json
 bp/items/dash.json
-bp/items/disaster_flames/!flames_technique.json
+bp/items/disaster_flames/_flames_technique.json
 bp/items/disaster_flames/domain.json
 bp/items/disaster_flames/fists.json
 bp/items/disaster_flames/flames (1) - Copy.json
@@ -2869,7 +2869,7 @@ rp/animation_controllers/serpent.animations_controller.json
 rp/animation_controllers/sharko.animations_controllers.json
 rp/animation_controllers/soulking.animations_controllers.json
 rp/animation_controllers/totality.animations_controllers.json
-rp/animations/!front_vfx_locators.animation.json
+rp/animations/_front_vfx_locators.animation.json
 rp/animations/10shadows.animation.json
 rp/animations/absorption.animation.json
 rp/animations/amberbeast.animation.json
@@ -3234,7 +3234,7 @@ rp/attachables/yuji/soul_shrine1.json
 rp/attachables/yuji/yuji_technique.json
 rp/attachables/yuji_fist.json
 rp/blocks.json
-rp/entity/!front_vfx.json
+rp/entity/_front_vfx.json
 rp/entity/armor_stand.entity.json
 rp/entity/attractor.json
 rp/entity/bean.json
@@ -7336,8 +7336,8 @@ rp/particles/yuji/yuji_domain_slash4.particle.json
 rp/particles/yuji/yuji_domain_slash6.particle.json
 rp/particles/yuji/yuji_domain_slash7.particle.json
 rp/particles/yuji_outline.particle.json
-rp/render_controllers/!body_transformation_or_heian.json
-rp/render_controllers/!ct_face.render_controllers.json
+rp/render_controllers/_body_transformation_or_heian.json
+rp/render_controllers/_ct_face.render_controllers.json
 rp/render_controllers/airhorn.json
 rp/render_controllers/anim.json
 rp/render_controllers/arx.entity.outline.json

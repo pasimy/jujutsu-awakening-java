@@ -18,14 +18,36 @@ import net.minecraft.world.entity.Entity;
 public final class PlayerAnims {
 	private PlayerAnims() {}
 
-	private static final JsonObject DESC = new JsonObject();
+	private static JsonObject DESC;
 
-	public static Animator animator(Entity p) { return Animator.of(p, DESC); }
+	/** the add-on's player.entity.json, playing only its own transformation controllers (Heian Sukuna, Mahito's
+	 * weapons ...); Java's player animation stands in for the vanilla ones */
+	public static synchronized JsonObject desc() {
+		if (DESC == null) {
+			JsonObject d = Rp.entity("minecraft:player");
+			DESC = d == null ? new JsonObject() : d.deepCopy();
+			if (DESC.has("scripts") && DESC.getAsJsonObject("scripts").has("animate")) {
+				com.google.gson.JsonArray keep = new com.google.gson.JsonArray();
+				JsonObject anims = DESC.has("animations") ? DESC.getAsJsonObject("animations") : new JsonObject();
+				for (var e : DESC.getAsJsonObject("scripts").getAsJsonArray("animate")) {
+					String k = e.isJsonPrimitive() ? e.getAsString() : e.getAsJsonObject().keySet().iterator().next();
+					String id = anims.has(k) ? anims.get(k).getAsString() : "";
+					if (id.startsWith("controller.animation.") && !id.startsWith("controller.animation.player.") && !id.startsWith("controller.animation.humanoid.")) keep.add(e);
+				}
+				DESC.getAsJsonObject("scripts").add("animate", keep);
+			}
+		}
+		return DESC;
+	}
+
+	public static Animator animator(Entity p) { return Animator.of(p, desc()); }
 
 	public static final class Model extends PlayerModel<AbstractClientPlayer> {
 		private float[] root, waist, bodyPose;
 
 		public Model(ModelPart part, boolean slim) { super(part, slim); }
+
+		private AbstractClientPlayer player;
 
 		@Override
 		public void setupAnim(AbstractClientPlayer p, float limbSwing, float limbAmount, float age, float headYaw, float headPitch) {
@@ -36,9 +58,9 @@ public final class PlayerAnims {
 				part.xScale = part.yScale = part.zScale = 1f;
 			}
 			super.setupAnim(p, limbSwing, limbAmount, age, headYaw, headPitch);
+			player = p;
 			root = waist = bodyPose = null;
-			Animator a = Animator.peek(p);
-			if (a == null) return;
+			Animator a = animator(p);
 			// walking or punching ends a long held pose (Unlimited Void's sign would otherwise stay up after the cutscene)
 			if (limbAmount > 0.2f || attackTime > 0) a.endLongPoses(3);
 			float partial = net.minecraft.client.Minecraft.getInstance().getFrameTime();
@@ -86,6 +108,8 @@ public final class PlayerAnims {
 
 		@Override
 		public void renderToBuffer(PoseStack ps, VertexConsumer vc, int light, int overlay, float r, float g, float b, float a) {
+			// Heian Sukuna and the other body transformations hide the player (player.third_person's part_visibility)
+			if (player != null && PlayerLayer.transformed(player)) return;
 			if (root == null && waist == null && bodyPose == null) { super.renderToBuffer(ps, vc, light, overlay, r, g, b, a); return; }
 			ps.pushPose();
 			transform(ps, root, 0, 24, 0);
