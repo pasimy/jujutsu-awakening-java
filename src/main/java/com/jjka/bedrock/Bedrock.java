@@ -24,6 +24,9 @@ import net.minecraft.resources.ResourceLocation;
 
 /** Reading the two packs out of the jar (bedrock/bp, bedrock/rp), and small shared helpers */
 public final class Bedrock {
+	/** test hook: (entity, what happened to it) */
+	public static java.util.function.BiConsumer<net.minecraft.world.entity.Entity, String> DEBUG;
+
 	private Bedrock() {}
 
 	public static final String MODID = "jjka";

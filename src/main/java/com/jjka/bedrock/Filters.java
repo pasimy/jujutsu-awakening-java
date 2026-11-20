@@ -66,6 +66,8 @@ public final class Filters {
 		Entity e = c.subject(subjectName);
 		String op = o.has("operator") ? o.get("operator").getAsString() : "equals";
 		JsonElement value = o.get("value");
+		// a family / tag test without a value (the add-on has some, e.g. knockback_roar filters) is ignored by Bedrock
+		if (value == null && (test.equals("is_family") || test.equals("has_tag"))) return true;
 		String domain = o.has("domain") ? o.get("domain").getAsString() : null;
 		Object have;
 		switch (test) {

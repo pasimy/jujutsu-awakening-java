@@ -87,6 +87,8 @@ public final class Commands {
 			}
 			CACHE.put(line, cmd);
 		}
+		String prev = LINE;
+		LINE = line;
 		try {
 			return cmd.run(c);
 		} catch (StackOverflowError e) {
@@ -95,8 +97,11 @@ public final class Commands {
 		} catch (RuntimeException e) {
 			Bedrock.warnOnce("cmdrun", "Command failed '" + line + "': " + e);
 			return 0;
-		}
+		} finally { LINE = prev; }
 	}
+
+	/** the command line running now (for debugging) */
+	public static String LINE;
 
 	public static int runAs(Entity e, String line) {
 		if (e.getServer() == null) return 0;
@@ -490,7 +495,8 @@ public final class Commands {
 					if (ft != null) { List<Entity> fs = ft.entities(c); if (!fs.isEmpty()) look = fs.get(0).position(); }
 					else look = fp.at(c);
 					if (look != null) {
-						Vec3 from = target.add(0, e.getEyeHeight(), 0);
+						// Bedrock aims from the destination itself (feet), not the eyes: the add-on relies on it ("rotated ~ 0 run tp @s ~~~ facing ^^^1")
+						Vec3 from = target;
 						double dx = look.x - from.x, dy = look.y - from.y, dz = look.z - from.z, h = Math.sqrt(dx * dx + dz * dz);
 						nx = (float) -(Mth.atan2(dy, h) * Mth.RAD_TO_DEG);
 						ny = (float) (Mth.atan2(dz, dx) * Mth.RAD_TO_DEG) - 90f;
@@ -511,6 +517,7 @@ public final class Commands {
 	static void teleport(Entity e, ServerLevel level, Vec3 to, float yaw, float pitch) { teleport(e, level, to, yaw, pitch, true); }
 
 	static void teleport(Entity e, ServerLevel level, Vec3 to, float yaw, float pitch, boolean rotate) {
+		if (Bedrock.DEBUG != null) Bedrock.DEBUG.accept(e, "tp " + to + " <- " + LINE);
 		if (e instanceof ServerPlayer p) {
 			if (p.level() != level) p.teleportTo(level, to.x, to.y, to.z, yaw, pitch);
 			// without a new rotation, leave the player's view alone (Java would otherwise snap it back every tick)
@@ -519,6 +526,8 @@ public final class Commands {
 			p.resetFallDistance();
 		} else if (e.level() == level) {
 			e.moveTo(to.x, to.y, to.z, yaw, pitch);
+			// a Bedrock teleport stops the entity (the add-on relies on it: "tp @s ~~~" before a knockback, "tp @s @s" to freeze)
+			e.setDeltaMovement(Vec3.ZERO);
 			e.setYHeadRot(yaw);
 			if (e instanceof LivingEntity l) l.yBodyRot = yaw;
 			e.resetFallDistance();
@@ -627,6 +636,8 @@ public final class Commands {
 	/** The Bedrock cause of the damage being dealt right now (read by damage sensors) */
 	static final ThreadLocal<String> CAUSE = new ThreadLocal<>();
 
+	private static final Map<Entity, Long> HURT_AT = new java.util.WeakHashMap<>();
+
 	static Cmd damage(R r) {
 		Target t = r.target();
 		double amount = r.num();
@@ -643,9 +654,20 @@ public final class Commands {
 				DamageSource ds = source(l, cause, damager);
 				Vec3 v = e.getDeltaMovement();
 				CAUSE.set(cause);
+				// Bedrock's damage command lands every time, even several times a tick (the add-on deals a score's worth of
+				// damage one point at a time); Java would ignore all but the first during the hurt cooldown. Only the first
+				// hit of a tick makes a sound.
+				long now = c.server.getTickCount();
+				Long last = HURT_AT.put(l, now);
+				boolean quiet = last != null && last == now && !l.isSilent();
+				l.invulnerableTime = 0;
+				if (quiet) l.setSilent(true);
 				try {
 					if (l.hurt(ds, (float) amount)) n++;
-				} finally { CAUSE.remove(); }
+				} finally {
+					CAUSE.remove();
+					if (quiet) l.setSilent(false);
+				}
 				// the damage command doesn't push things around; the add-on does its own knockback
 				e.setDeltaMovement(v);
 			}
@@ -702,6 +724,8 @@ public final class Commands {
 		};
 	}
 
+	private static final Map<String, Long> AMBIENT = new ConcurrentHashMap<>();
+
 	static Cmd playsound(R r) {
 		String sound = r.word();
 		Target t = r.end() || r.coordNext() ? null : r.target();
@@ -715,8 +739,17 @@ public final class Commands {
 			Holder<SoundEvent> h = Holder.direct(SoundEvent.createVariableRangeEvent(rl));
 			double range = vol > 1 ? vol * 16 : 16;
 			int n = 0;
+			boolean mood = sound.startsWith("ambient.");
 			for (Entity e : who) {
 				if (!(e instanceof ServerPlayer sp) || sp.level() != c.level) continue;
+				// a long ambient sound the add-on re-plays every tick would pile up into a roar: let the last one finish
+				if (mood) {
+					String key = sp.getUUID() + "|" + sound;
+					Long last = AMBIENT.get(key);
+					long now = c.server.getTickCount();
+					if (last != null && now - last < 80 && now >= last) continue;
+					AMBIENT.put(key, now);
+				}
 				Vec3 where = at;
 				float v = vol;
 				if (sp.distanceToSqr(at) > range * range) {
@@ -726,6 +759,7 @@ public final class Commands {
 					v = min;
 				}
 				sp.connection.send(new ClientboundSoundPacket(h, SoundSource.MASTER, where.x, where.y, where.z, v, Mth.clamp(pitch, 0.01f, 2.5f), sp.getRandom().nextLong()));
+				if (Bedrock.DEBUG != null) Bedrock.DEBUG.accept(sp, "sound " + sound + " <- " + LINE);
 				n++;
 			}
 			return n;

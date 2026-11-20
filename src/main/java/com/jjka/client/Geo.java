@@ -71,6 +71,7 @@ public final class Geo {
 			boolean boneMirror = b.has("mirror") && b.get("mirror").getAsBoolean();
 			float boneInflate = b.has("inflate") ? b.get("inflate").getAsFloat() : 0;
 			if (b.has("cubes")) for (JsonElement ce : b.getAsJsonArray("cubes")) cube(g, bone, ce.getAsJsonObject(), boneMirror, boneInflate);
+			if (b.has("poly_mesh") && b.get("poly_mesh").isJsonObject()) mesh(g, bone, b.getAsJsonObject("poly_mesh"));
 			if (b.has("locators")) for (var l : b.getAsJsonObject("locators").entrySet()) {
 				JsonArray p = l.getValue().isJsonArray() ? l.getValue().getAsJsonArray() : l.getValue().getAsJsonObject().getAsJsonArray("offset");
 				bone.locators.put(l.getKey(), new Vector3f(f(p, 0), 24 - f(p, 1), f(p, 2)));
@@ -157,6 +158,38 @@ public final class Geo {
 			q[20] = n.x; q[21] = n.y; q[22] = n.z;
 			// skip faces with no area in the texture (Bedrock's way of hiding a face)
 			if (u1 == u2 && v1 == v2) continue;
+			bone.quads.add(q);
+		}
+	}
+
+	/**
+	 * poly_mesh: free-form triangles / quads (domain spheres and the like). Positions are model-space pixels like cube origins;
+	 * UVs count up from the bottom of the texture (0-1 when normalized_uvs, else pixels).
+	 */
+	private static void mesh(Geo g, Bone bone, JsonObject m) {
+		JsonArray pos = m.getAsJsonArray("positions"), nor = m.has("normals") ? m.getAsJsonArray("normals") : null, uv = m.has("uvs") ? m.getAsJsonArray("uvs") : null;
+		if (pos == null || !m.has("polys") || !m.get("polys").isJsonArray()) return;
+		boolean norm = m.has("normalized_uvs") && m.get("normalized_uvs").getAsBoolean();
+		for (JsonElement pe : m.getAsJsonArray("polys")) {
+			JsonArray poly = pe.getAsJsonArray();
+			if (poly.size() < 3) continue;
+			float[] q = new float[23];
+			for (int i = 0; i < 4; i++) {
+				JsonArray vtx = poly.get(Math.min(i, poly.size() - 1)).getAsJsonArray();
+				JsonArray p = pos.get(vtx.get(0).getAsInt()).getAsJsonArray();
+				q[i * 5] = f(p, 0); q[i * 5 + 1] = 24 - f(p, 1); q[i * 5 + 2] = f(p, 2);
+				if (uv != null && vtx.size() > 2) {
+					JsonArray t = uv.get(vtx.get(2).getAsInt()).getAsJsonArray();
+					float u = f(t, 0), v = f(t, 1);
+					q[i * 5 + 3] = norm ? u : u / g.texW;
+					q[i * 5 + 4] = norm ? 1 - v : 1 - v / g.texH;
+				}
+				if (i == 0 && nor != null && vtx.size() > 1) {
+					JsonArray n = nor.get(vtx.get(1).getAsInt()).getAsJsonArray();
+					q[20] = f(n, 0); q[21] = -f(n, 1); q[22] = f(n, 2);
+				}
+			}
+			if (nor == null) q[21] = -1;
 			bone.quads.add(q);
 		}
 	}

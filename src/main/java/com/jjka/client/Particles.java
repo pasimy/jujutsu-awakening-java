@@ -223,6 +223,9 @@ public final class Particles {
 		final double activeTime;
 		final double looping;
 		int timelineFired = -1;
+		/** minecraft:emitter_local_space: particles ride along with the emitter / turn with the entity it's on */
+		final boolean localPos, localRot;
+		double yaw, pitch;
 
 		Emitter(Def d, Vec3 at, Entity bound, String locator) {
 			this.d = d;
@@ -230,6 +233,10 @@ public final class Particles {
 			this.bound = bound;
 			this.locator = locator;
 			scope = new Scope(bound);
+			JsonObject ls = d.comp("minecraft:emitter_local_space");
+			localPos = ls != null && ls.has("position") && ls.get("position").getAsBoolean();
+			localRot = ls != null && ls.has("rotation") && ls.get("rotation").getAsBoolean();
+			facing();
 			for (int i = 1; i <= 4; i++) scope.vars.put("emitter_random_" + i, RNG.nextDouble());
 			scope.vars.put("emitter_age", 0.0);
 			JsonObject init = d.comp("minecraft:emitter_initialization");
@@ -285,6 +292,19 @@ public final class Particles {
 			}
 		}
 
+		/** the emitter's frame: the entity it's on, facing its way (+z forward, like Bedrock) */
+		void facing() {
+			if (bound == null || bound.isRemoved()) return;
+			if (bound instanceof net.minecraft.world.entity.LivingEntity l) { yaw = l.yBodyRot; pitch = 0; }
+			else { yaw = bound.getYRot(); pitch = bound.getXRot(); }
+		}
+
+		/** a direction in the emitter's frame -> the world */
+		Vec3 turn(Vec3 v) {
+			if (!localRot || bound == null) return v;
+			return v.xRot((float) Math.toRadians(-pitch)).yRot((float) Math.toRadians(-yaw));
+		}
+
 		Vec3 where() {
 			if (bound != null && !bound.isRemoved()) {
 				Animator a = Animator.peek(bound);
@@ -296,7 +316,7 @@ public final class Particles {
 
 		/** false when it's finished and has no particles left */
 		boolean update(double dt) {
-			if (bound != null && !bound.isRemoved()) origin = where();
+			if (bound != null && !bound.isRemoved()) { origin = where(); facing(); }
 			age += dt;
 			scope.vars.put("emitter_age", age);
 			curves(d, scope);
@@ -348,6 +368,8 @@ public final class Particles {
 		final Emitter em;
 		final PScope s;
 		Vec3 pos, vel;
+		/** with local position: where it is relative to the emitter, in the emitter's frame */
+		Vec3 rel;
 		double age, life, rot, rotRate;
 		Vec3 dir;
 
@@ -361,13 +383,14 @@ public final class Particles {
 			life = lt == null ? 1 : eval(lt.get("max_lifetime"), s, 1);
 			s.vars.put("particle_lifetime", life);
 			Vec3[] pd = shape(d, s);
-			pos = em.origin.add(pd[0]);
 			dir = pd[1];
 			JsonObject sp = d.comp("minecraft:particle_initial_speed");
 			JsonElement speed = d.c.get("minecraft:particle_initial_speed");
 			if (speed != null && speed.isJsonArray()) { float[] v = vec(speed, s, 0); vel = new Vec3(v[0], v[1], v[2]); }
 			else { double spd = speed == null ? 0 : speed.isJsonObject() ? 0 : Molang.eval(speed, s); vel = dir.normalize().scale(spd); }
 			if (sp != null && sp.has("speed")) vel = dir.normalize().scale(eval(sp.get("speed"), s, 0));
+			if (em.localPos) { rel = pd[0]; pos = em.origin.add(em.turn(rel)); }
+			else { pos = em.origin.add(em.turn(pd[0])); vel = em.turn(vel); dir = em.turn(dir); }
 			JsonObject spin = d.comp("minecraft:particle_initial_spin");
 			if (spin != null) { rot = eval(spin.get("rotation"), s, 0); rotRate = eval(spin.get("rotation_rate"), s, 0); }
 			JsonObject init = d.comp("minecraft:particle_initialization");
@@ -394,7 +417,10 @@ public final class Particles {
 			JsonObject par = d.comp("minecraft:particle_motion_parametric");
 			if (par != null && par.has("relative_position")) {
 				float[] rp = vec(par.get("relative_position"), s, 0);
-				pos = em.origin.add(rp[0], rp[1], rp[2]);
+				pos = em.origin.add(em.turn(new Vec3(rp[0], rp[1], rp[2])));
+			} else if (rel != null) {
+				rel = rel.add(vel.scale(dt));
+				pos = em.origin.add(em.turn(rel));
 			} else {
 				Vec3 next = pos.add(vel.scale(dt));
 				JsonObject col = d.comp("minecraft:particle_motion_collision");
@@ -547,10 +573,10 @@ public final class Particles {
 		Vector3f right, up;
 		Vector3f toCam = new Vector3f((float) (cp.x - pos.x), (float) (cp.y - pos.y), (float) (cp.z - pos.z));
 		Vector3f camLeft = cam.getLeftVector(), camUp = cam.getUpVector();
-		Vec3 dirv = p.vel;
+		Vec3 dirv = p.rel != null ? p.em.turn(p.vel) : p.vel;
 		if (bb.has("direction")) {
 			JsonObject dm = bb.getAsJsonObject("direction");
-			if (dm.has("mode") && dm.get("mode").getAsString().equals("custom") && dm.has("custom_direction")) { float[] v = vec(dm.get("custom_direction"), p.s, 0); dirv = new Vec3(v[0], v[1], v[2]); }
+			if (dm.has("mode") && dm.get("mode").getAsString().equals("custom") && dm.has("custom_direction")) { float[] v = vec(dm.get("custom_direction"), p.s, 0); dirv = p.em.turn(new Vec3(v[0], v[1], v[2])); }
 		}
 		Vector3f dir = dirv.lengthSqr() < 1e-8 ? new Vector3f(0, 1, 0) : new Vector3f((float) dirv.x, (float) dirv.y, (float) dirv.z).normalize();
 		switch (mode) {
@@ -589,9 +615,9 @@ public final class Particles {
 				if (up.lengthSquared() < 1e-6) up.set(0, 1, 0);
 				up.normalize();
 			}
-			case "emitter_transform_xy" -> { right = new Vector3f(1, 0, 0); up = new Vector3f(0, 1, 0); }
-			case "emitter_transform_xz" -> { right = new Vector3f(1, 0, 0); up = new Vector3f(0, 0, 1); }
-			case "emitter_transform_yz" -> { right = new Vector3f(0, 0, 1); up = new Vector3f(0, 1, 0); }
+			case "emitter_transform_xy" -> { right = v3(p.em.turn(new Vec3(1, 0, 0))); up = v3(p.em.turn(new Vec3(0, 1, 0))); }
+			case "emitter_transform_xz" -> { right = v3(p.em.turn(new Vec3(1, 0, 0))); up = v3(p.em.turn(new Vec3(0, 0, 1))); }
+			case "emitter_transform_yz" -> { right = v3(p.em.turn(new Vec3(0, 0, 1))); up = v3(p.em.turn(new Vec3(0, 1, 0))); }
 			default -> { right = new Vector3f(camLeft).negate(); up = new Vector3f(camUp); }
 		}
 		if (p.rot != 0 && !mode.startsWith("direction") && !mode.equals("lookat_direction")) {
@@ -610,6 +636,8 @@ public final class Particles {
 		vert(b, m, x + right.x + up.x, y + right.y + up.y, z + right.z + up.z, uv[2], uv[1], col);
 		vert(b, m, x - right.x + up.x, y - right.y + up.y, z - right.z + up.z, uv[0], uv[1], col);
 	}
+
+	private static Vector3f v3(Vec3 v) { return new Vector3f((float) v.x, (float) v.y, (float) v.z); }
 
 	private static void vert(BufferBuilder b, Matrix4f m, float x, float y, float z, float u, float v, float[] c) {
 		b.vertex(m, x, y, z).uv(u, v).color(c[0], c[1], c[2], c[3]).endVertex();

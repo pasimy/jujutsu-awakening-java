@@ -35,6 +35,7 @@ public final class Scripts {
 	}
 
 	public static void push(Entity e, Vec3 vel) {
+		if (Bedrock.DEBUG != null) Bedrock.DEBUG.accept(e, "push " + vel + " <- " + Commands.LINE);
 		e.setDeltaMovement(vel);
 		e.hasImpulse = true;
 		if (e instanceof ServerPlayer p) Net.CHANNEL.send(net.minecraftforge.network.PacketDistributor.PLAYER.with(() -> p), new Net.Fx("push", "", "", "", new float[] { (float) vel.x, (float) vel.y, (float) vel.z }));

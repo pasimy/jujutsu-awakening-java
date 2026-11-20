@@ -250,8 +250,11 @@ public class BedrockEntity extends PathfinderMob {
 			String ev = entityData.get(SPAWN_EVENT);
 			a.spawnedOnce(ev.isEmpty() ? null : ev);
 			a.tick();
+			if (isAlive()) roar(sl, a);
+			if (isAlive()) despawn(a);
 			if (flying != null && isAlive()) fly(sl);
-			if (fuse >= 0 && isAlive()) {
+			// (a fuse-0 explosion goes off even if something killed it the moment it was summoned)
+			if (fuse >= 0 && !isRemoved()) {
 				if (fuse-- <= 0) {
 					fuse = -1;
 					boolean griefing = sl.getGameRules().getBoolean(net.minecraft.world.level.GameRules.RULE_MOBGRIEFING);
@@ -266,6 +269,92 @@ public class BedrockEntity extends PathfinderMob {
 	@Override
 	protected void customServerAiStep() {
 		super.customServerAiStep();
+	}
+
+	// ------------------------------------------------------------------ sounds: only what the resource pack's sounds.json gives it
+	private static JsonObject entitySounds;
+
+	private JsonObject soundDef() {
+		if (entitySounds == null) {
+			JsonObject j = Bedrock.json("rp/sounds.json");
+			JsonObject es = j != null && j.has("entity_sounds") ? j.getAsJsonObject("entity_sounds") : null;
+			entitySounds = es != null && es.has("entities") ? es.getAsJsonObject("entities") : new JsonObject();
+		}
+		EntityDef d = def();
+		return d != null && entitySounds.has(d.id) && entitySounds.get(d.id).isJsonObject() ? entitySounds.getAsJsonObject(d.id) : null;
+	}
+
+	/** Bedrock entities without sounds in the resource pack (projectiles, explosion markers ...) make none, not Java's generic hurt sound */
+	private net.minecraft.sounds.SoundEvent sound(String event) {
+		JsonObject d = soundDef();
+		if (d == null || !d.has("events") || !d.getAsJsonObject("events").has(event)) return null;
+		JsonElement e = d.getAsJsonObject("events").get(event);
+		String name = e.isJsonObject() ? (e.getAsJsonObject().has("sound") ? e.getAsJsonObject().get("sound").getAsString() : "") : e.getAsString();
+		if (name.isEmpty()) return null;
+		net.minecraft.resources.ResourceLocation rl = Sounds.java(name);
+		return rl == null ? null : net.minecraft.sounds.SoundEvent.createVariableRangeEvent(rl);
+	}
+
+	@Override
+	protected net.minecraft.sounds.SoundEvent getHurtSound(net.minecraft.world.damagesource.DamageSource src) { return sound("hurt"); }
+
+	@Override
+	protected net.minecraft.sounds.SoundEvent getDeathSound() { return sound("death"); }
+
+	@Override
+	protected net.minecraft.sounds.SoundEvent getAmbientSound() { return sound("ambient"); }
+
+	@Override
+	protected float getSoundVolume() {
+		JsonObject d = soundDef();
+		return d != null && d.has("volume") ? d.get("volume").getAsFloat() : 1f;
+	}
+
+	// ------------------------------------------------------------------ minecraft:behavior.knockback_roar / minecraft:despawn
+	private int roarAge = -1;
+
+	/** A roar: after attack_time, everything in range (that passes the filters) is knocked away; after duration, on_roar_end */
+	private void roar(ServerLevel sl, Actor a) {
+		JsonObject r = a.component("minecraft:behavior.knockback_roar");
+		if (r == null) { roarAge = -1; return; }
+		roarAge++;
+		int attack = (int) Math.round((r.has("attack_time") ? r.get("attack_time").getAsDouble() : 0.5) * 20);
+		int duration = (int) Math.round((r.has("duration") ? r.get("duration").getAsDouble() : 1) * 20);
+		if (roarAge == attack) {
+			double range = r.has("knockback_range") ? r.get("knockback_range").getAsDouble() : 4;
+			double strength = r.has("knockback_horizontal_strength") ? r.get("knockback_horizontal_strength").getAsDouble() : r.has("knockback_strength") ? r.get("knockback_strength").getAsDouble() : 4;
+			double vertical = r.has("knockback_vertical_strength") ? r.get("knockback_vertical_strength").getAsDouble() : 4;
+			double cap = r.has("knockback_height_cap") ? r.get("knockback_height_cap").getAsDouble() : 0.4;
+			float dmg = r.has("knockback_damage") ? r.get("knockback_damage").getAsFloat() : 0;
+			for (Entity e : sl.getEntities(this, getBoundingBox().inflate(range), x -> x instanceof LivingEntity && x.isAlive() && !(x instanceof BedrockEntity b && b.def() == def()))) {
+				if (e.distanceTo(this) > range) continue;
+				Filters.Ctx ctx = new Filters.Ctx(this, e, e, null, e instanceof Player ? e : null);
+				if (!Filters.test(r.get("knockback_filters"), ctx)) continue;
+				double dx = e.getX() - getX(), dz = e.getZ() - getZ();
+				// something standing right on top of it (the caster) has no direction to be pushed in
+				if (dx * dx + dz * dz < 0.25) continue;
+				Vec3 old = e.getDeltaMovement();
+				double len = Math.sqrt(dx * dx + dz * dz);
+				Scripts.push(e, new Vec3(old.x / 2 + dx / len * strength, Math.min(cap, old.y / 2 + vertical), old.z / 2 + dz / len * strength));
+				if (dmg > 0 && Filters.test(r.get("damage_filters"), ctx)) e.hurt(damageSources().mobAttack(this), dmg);
+			}
+		}
+		if (roarAge == Math.max(attack, duration)) {
+			JsonObject end = r.has("on_roar_end") && r.get("on_roar_end").isJsonObject() ? r.getAsJsonObject("on_roar_end") : null;
+			if (end != null && end.has("event")) a.event(end.get("event").getAsString());
+		}
+	}
+
+	/** minecraft:despawn: gone when its filters pass, or (despawn_from_distance) when no player is near */
+	private void despawn(Actor a) {
+		JsonObject d = a.component("minecraft:despawn");
+		if (d == null) return;
+		if (d.has("filters")) { if (Filters.test(d.get("filters"), Filters.Ctx.of(this))) discard(); return; }
+		if (d.has("despawn_from_distance") && tickCount % 20 == 0 && !a.has("minecraft:persistent")) {
+			JsonObject far = d.get("despawn_from_distance").isJsonObject() ? d.getAsJsonObject("despawn_from_distance") : new JsonObject();
+			double max = far.has("max_distance") ? far.get("max_distance").getAsDouble() : 128;
+			if (level().getNearestPlayer(this, max) == null) discard();
+		}
 	}
 
 	// ------------------------------------------------------------------ minecraft:projectile
