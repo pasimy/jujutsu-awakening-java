@@ -53,7 +53,10 @@ public class BedrockRenderer extends EntityRenderer<BedrockEntity> {
 	@Override
 	public void render(BedrockEntity e, float yaw, float partial, PoseStack ps, MultiBufferSource buffers, int light) {
 		JsonObject desc = Rp.entity(Actor.typeId(e));
-		if (desc != null) draw(e, desc, partial, ps, buffers, light);
+		if (desc != null) {
+			try { draw(e, desc, partial, ps, buffers, light); }
+			catch (Throwable ex) { Bedrock.warnOnce("render", "Couldn't draw " + Actor.typeId(e) + ": " + ex); }
+		}
 		if (e.hasCustomName() && shouldShowName(e) && Minecraft.getInstance().options.renderDebug) super.render(e, yaw, partial, ps, buffers, light);
 	}
 

@@ -58,6 +58,7 @@ public final class Net {
 		CHANNEL.registerMessage(id++, ActorSync.class, ActorSync::write, ActorSync::new, ActorSync::handle);
 		CHANNEL.registerMessage(id++, Input.class, Input::write, Input::new, Input::handle);
 		CHANNEL.registerMessage(id++, Menu.class, Menu::write, Menu::new, Menu::handle);
+		CHANNEL.registerMessage(id++, Press.class, Press::write, Press::new, Press::handle);
 	}
 
 	private static void onClient(NetworkEvent.Context ctx, Runnable r) {
@@ -180,6 +181,18 @@ public final class Net {
 				ctx.enqueueWork(() -> { if (p != null) Server.menu(p, scroll, press); });
 				ctx.setPacketHandled(true);
 			} else onClient(ctx, () -> client.menu(page));
+		}
+	}
+
+	/** client -> server: a move key (the selected technique's move number) or the dash key */
+	public record Press(String kind, int index) {
+		Press(FriendlyByteBuf b) { this(b.readUtf(), b.readVarInt()); }
+		void write(FriendlyByteBuf b) { b.writeUtf(kind); b.writeVarInt(index); }
+		void handle(Supplier<NetworkEvent.Context> c) {
+			NetworkEvent.Context ctx = c.get();
+			ServerPlayer p = ctx.getSender();
+			ctx.enqueueWork(() -> { if (p != null) Server.press(p, kind, index); });
+			ctx.setPacketHandled(true);
 		}
 	}
 

@@ -34,7 +34,8 @@ public final class PlayerAnims {
 			Animator a = Animator.peek(p);
 			if (a == null) return;
 			float partial = net.minecraft.client.Minecraft.getInstance().getFrameTime();
-			Map<String, float[]> pose = a.frame(partial);
+			Map<String, float[]> pose;
+			try { pose = a.frame(partial); } catch (Throwable ex) { com.jjka.bedrock.Bedrock.warnOnce("anim", "Player animation failed: " + ex); return; }
 			if (pose.isEmpty()) return;
 			apply(head, pose.get("head"));
 			apply(rightArm, pose.get("rightarm"));

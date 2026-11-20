@@ -75,6 +75,25 @@ public final class Items {
 
 	public static Iterable<RegistryObject<Item>> all() { return ITEMS.values(); }
 
+	private static Map<String, String> descriptions;
+
+	/** an item's display name / description text from the behaviour pack */
+	public static synchronized String description(String id) {
+		if (descriptions == null) {
+			descriptions = new HashMap<>();
+			for (String file : Bedrock.list("bp/items/", ".json")) {
+				JsonObject j = Bedrock.json(file);
+				if (j == null || !j.has("minecraft:item")) continue;
+				JsonObject it = j.getAsJsonObject("minecraft:item");
+				JsonObject c = it.has("components") ? it.getAsJsonObject("components") : new JsonObject();
+				JsonElement dn = c.get("minecraft:display_name");
+				if (dn != null && dn.isJsonObject() && dn.getAsJsonObject().has("value"))
+					descriptions.put(Bedrock.id(it.getAsJsonObject("description").get("identifier").getAsString()), dn.getAsJsonObject().get("value").getAsString());
+			}
+		}
+		return descriptions.get(Bedrock.id(id));
+	}
+
 	public static Item item(String bedrockId) {
 		String id = Bedrock.id(bedrockId);
 		RegistryObject<Item> ro = ITEMS.get(id);
@@ -140,7 +159,12 @@ public final class Items {
 	}
 
 	/** What the player counts as holding: the selected technique in technique mode, otherwise their real main hand */
+	/** an item pretended to be in the hand for a few ticks (a move key, the dash key): {id, ticks} */
+	public static final Map<java.util.UUID, Object[]> FORCED = new java.util.concurrent.ConcurrentHashMap<>();
+
 	public static ItemStack mainhand(Player p) {
+		Object[] f = FORCED.get(p.getUUID());
+		if (f != null && (Integer) f[1] > 0) { Item i = item((String) f[0]); if (i != null) return new ItemStack(i); }
 		String held = bar(p).held();
 		if (held != null) { Item i = item(held); return i == null ? ItemStack.EMPTY : new ItemStack(i); }
 		return p.getMainHandItem();
@@ -184,7 +208,7 @@ public final class Items {
 	}
 
 	/** Fighting styles: the add-on's "fists" / "combat" items you punch with */
-	static boolean style(String id) { return id.endsWith("fists") || id.endsWith("_combat") || id.endsWith("combat_style"); }
+	public static boolean style(String id) { return id.endsWith("fists") || id.endsWith("_combat") || id.endsWith("combat_style"); }
 
 	private static int match(ItemStack s, String id) { return !s.isEmpty() && idOf(s).equals(id) ? s.getCount() : 0; }
 
@@ -223,7 +247,7 @@ public final class Items {
 			if (item == null) { Bedrock.warnOnce("item", "Unknown item " + id); return 0; }
 			int n = 0;
 			for (Entity e : t.entities(c)) if (e instanceof ServerPlayer p) {
-				if (locked && item instanceof BedrockItem) {
+				if ((locked || style(id)) && item instanceof BedrockItem) {
 					Bar b = bar(p);
 					if (!b.items.contains(id) || item.getMaxStackSize() > 1) b.items.add(id);
 					saveBar(p);

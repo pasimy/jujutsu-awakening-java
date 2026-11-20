@@ -276,8 +276,9 @@ public final class Selector {
 			if (l != null && p.experienceLevel > l) return false;
 			if (lm != null && p.experienceLevel < lm) return false;
 		}
-		if (rx != null && e.getXRot() > rx) return false;
-		if (rxm != null && e.getXRot() < rxm) return false;
+		float pitch = Queries.pitch(e);
+		if (rx != null && pitch > rx) return false;
+		if (rxm != null && pitch < rxm) return false;
 		if (ry != null || rym != null) {
 			float yaw = net.minecraft.util.Mth.wrapDegrees(e.getYRot());
 			if (ry != null && yaw > ry) return false;

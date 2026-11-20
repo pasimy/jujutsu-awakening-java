@@ -67,17 +67,19 @@ public final class Server {
 		}
 		USED.clear();
 		USED_ITEM.clear();
+		macros(server);
+		if (server.getTickCount() % 20 == 0) for (ServerPlayer p : server.getPlayerList().getPlayers()) styles(p);
 		Queries.PRESS_JUMP.replaceAll((k, v) -> v - 1);
 		Queries.PRESS_JUMP.values().removeIf(v -> v < 0);
 		Queries.PRESS_SNEAK.replaceAll((k, v) -> v - 1);
 		Queries.PRESS_SNEAK.values().removeIf(v -> v < 0);
 		for (ServerPlayer p : server.getPlayerList().getPlayers()) {
 			Actor a = Actor.of(p);
-			a.variables.put("attack_time", (double) p.getAttackAnim(1f));
+			a.variables.put("attack_time", Queries.PRESS_LEFT.getOrDefault(p.getUUID(), 0) > 0 ? 0.6 : (double) p.getAttackAnim(1f));
 			a.tick();
 		}
-		Functions.tick(server);
-		Scripts.tick(server);
+		try { Functions.tick(server); } catch (Throwable t) { Bedrock.warnOnce("tick", "Tick functions failed: " + t); }
+		try { Scripts.tick(server); } catch (Throwable t) { Bedrock.warnOnce("tick", "Scripts failed: " + t); }
 		menuPages(server);
 		for (String[] t : TAGGED) {
 			ServerPlayer p = server.getPlayerList().getPlayer(UUID.fromString(t[0]));
@@ -120,10 +122,86 @@ public final class Server {
 			if (attack) Queries.PRESS_JUMP.put(p.getUUID(), 3);
 			if (right) Queries.PRESS_SNEAK.put(p.getUUID(), 3);
 		}
+		// right click: your fighting style's moves (Bedrock: right clicking the style item, with sneak / jump)
 		if (use) {
-			String held = Items.bar(p).held();
-			if (held != null) use(p, held);
+			String style = style(p);
+			if (style != null) hold(p, style, 4, () -> use(p, style));
 		}
+	}
+
+	/** A fighting style in the real inventory (given before, or by a give without a lock) moves onto the bar */
+	private static void styles(ServerPlayer p) {
+		var inv = p.getInventory();
+		for (int i = 0; i < inv.getContainerSize(); i++) {
+			if (!(inv.getItem(i).getItem() instanceof Items.BedrockItem b) || !Items.style(b.id)) continue;
+			inv.setItem(i, net.minecraft.world.item.ItemStack.EMPTY);
+			Items.Bar bar = Items.bar(p);
+			if (!bar.items.contains(b.id)) bar.items.add(b.id);
+			Items.saveBar(p);
+		}
+	}
+
+	static String style(ServerPlayer p) {
+		for (String s : Items.bar(p).items) if (Items.style(s)) return s;
+		return null;
+	}
+
+	// ------------------------------------------------------------------ move keys: fake a move's inputs, then use the item
+	private record Step(int[] delay, Runnable run) {}
+
+	private static final Map<UUID, List<Step>> MACROS = new HashMap<>();
+
+	private static void later(ServerPlayer p, int ticks, Runnable r) { MACROS.computeIfAbsent(p.getUUID(), k -> new ArrayList<>()).add(new Step(new int[] { ticks }, r)); }
+
+	/** pretend the item is in hand for a few ticks, using it now */
+	private static void hold(ServerPlayer p, String item, int ticks, Runnable then) {
+		Items.FORCED.put(p.getUUID(), new Object[] { item, ticks });
+		then.run();
+	}
+
+	static void press(ServerPlayer p, String kind, int index) {
+		UUID id = p.getUUID();
+		if (kind.equals("dash")) {
+			if (Items.has(p, "ds:dash", null, -1)) hold(p, "ds:dash", 4, () -> use(p, "ds:dash"));
+			return;
+		}
+		Items.Bar bar = Items.bar(p);
+		if (bar.selected < 0 || bar.selected >= bar.items.size()) return;
+		String tech = bar.items.get(bar.selected);
+		List<Moves.Move> moves = Moves.of(tech);
+		if (index < 0 || index >= moves.size()) return;
+		Moves.Move m = moves.get(index);
+		int t = 6;
+		if (m.sneak()) Queries.PRESS_SNEAK.put(id, t);
+		if (m.jump()) Queries.PRESS_JUMP.put(id, t);
+		if (m.sprint()) Queries.PRESS_SPRINT.put(id, t);
+		Queries.PITCH.put(id, new float[] { m.lookDown() ? 85 : m.lookUp() ? -85 : Math.max(-60, Math.min(60, p.getXRot())), t + 2 });
+		Items.FORCED.put(id, new Object[] { tech, t + 4 });
+		if (m.doubleSneak()) {
+			Queries.PRESS_SNEAK.put(id, 2);
+			later(p, 4, () -> Queries.PRESS_SNEAK.put(id, 4));
+		}
+		// a tick for the add-on to see the held keys, then the click
+		later(p, m.doubleSneak() ? 6 : 2, () -> {
+			if (m.punch()) { Queries.PRESS_LEFT.put(id, 3); p.swing(net.minecraft.world.InteractionHand.MAIN_HAND, true); }
+			else use(p, tech);
+		});
+	}
+
+	private static void macros(MinecraftServer server) {
+		for (var en : new ArrayList<>(MACROS.entrySet())) {
+			ServerPlayer p = server.getPlayerList().getPlayer(en.getKey());
+			if (p == null) { MACROS.remove(en.getKey()); continue; }
+			List<Step> ready = new ArrayList<>();
+			en.getValue().removeIf(s -> { if (--s.delay[0] <= 0) { ready.add(s); return true; } return false; });
+			for (Step s : ready) s.run.run();
+			if (en.getValue().isEmpty()) MACROS.remove(en.getKey());
+		}
+		for (var m : List.of(Queries.PRESS_SPRINT, Queries.PRESS_LEFT)) { m.replaceAll((k, v) -> v - 1); m.values().removeIf(v -> v < 0); }
+		Queries.PITCH.values().forEach(v -> v[1]--);
+		Queries.PITCH.values().removeIf(v -> v[1] < 0);
+		Items.FORCED.values().forEach(v -> v[1] = (Integer) v[1] - 1);
+		Items.FORCED.values().removeIf(v -> (Integer) v[1] < 0);
 	}
 
 	// ------------------------------------------------------------------ the start menu, clickable

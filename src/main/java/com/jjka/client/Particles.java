@@ -39,7 +39,7 @@ public final class Particles {
 	private Particles() {}
 
 	static final int MAX = 30000;
-	private static final List<Emitter> EMITTERS = new ArrayList<>();
+	private static final List<Emitter> EMITTERS = new ArrayList<>(), PENDING = new ArrayList<>();
 	private static int count;
 	private static final java.util.Random RNG = new java.util.Random();
 
@@ -85,9 +85,9 @@ public final class Particles {
 		if (id.startsWith("minecraft:") && def(id) == null) { vanilla(id, at); return; }
 		Def d = def(id);
 		if (d == null) { Bedrock.warnOnce("particle", "No particle " + id); return; }
-		if (EMITTERS.size() > 2000) return;
-		Emitter e = new Emitter(d, at, bound, locator);
-		EMITTERS.add(e);
+		if (EMITTERS.size() + PENDING.size() > 2000) return;
+		// (an effect can start another one while emitters are updating; those join after the loop)
+		PENDING.add(new Emitter(d, at, bound, locator));
 	}
 
 	private static void vanilla(String id, Vec3 at) {
@@ -112,7 +112,7 @@ public final class Particles {
 		level.addParticle(o, at.x, at.y, at.z, 0, 0, 0);
 	}
 
-	public static void clear() { EMITTERS.clear(); count = 0; }
+	public static void clear() { EMITTERS.clear(); PENDING.clear(); count = 0; }
 
 	// ------------------------------------------------------------------ Molang scope for one emitter / particle
 	static class Scope implements Molang.Scope {
@@ -482,11 +482,13 @@ public final class Particles {
 		last = nowN;
 		if (Minecraft.getInstance().isPaused()) dt = 0;
 		if (Minecraft.getInstance().level == null) { clear(); return; }
+		EMITTERS.addAll(PENDING);
+		PENDING.clear();
 		for (Iterator<Emitter> it = EMITTERS.iterator(); it.hasNext();) {
 			Emitter e = it.next();
 			try {
 				if (!e.update(dt)) it.remove();
-			} catch (RuntimeException ex) {
+			} catch (Throwable ex) {
 				Bedrock.warnOnce("particle", "Particle " + e.d.id + " failed: " + ex);
 				count -= e.particles.size();
 				it.remove();
@@ -509,7 +511,9 @@ public final class Particles {
 			RenderSystem.setShaderTexture(0, d.texture);
 			BufferBuilder b = Tesselator.getInstance().getBuilder();
 			b.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
-			for (Emitter e : group) for (P p : e.particles) quad(b, m, p, cam, cp);
+			for (Emitter e : group) for (P p : e.particles) {
+				try { quad(b, m, p, cam, cp); } catch (Throwable ex) { Bedrock.warnOnce("particle", "Particle " + e.d.id + " can't draw: " + ex); }
+			}
 			Tesselator.getInstance().end();
 		}
 		RenderSystem.defaultBlendFunc();

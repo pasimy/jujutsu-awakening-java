@@ -89,6 +89,9 @@ public final class Commands {
 		}
 		try {
 			return cmd.run(c);
+		} catch (StackOverflowError e) {
+			Bedrock.warnOnce("cmdrun", "Command recursed too deep '" + line + "'");
+			return 0;
 		} catch (RuntimeException e) {
 			Bedrock.warnOnce("cmdrun", "Command failed '" + line + "': " + e);
 			return 0;

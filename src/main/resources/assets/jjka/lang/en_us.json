@@ -229,8 +229,8 @@
  "item.jjka.ds__water_fists": "§r§cWater-Stream Rock Smashing Fist",
  "item.jjka.ds__equinox_blade": "§r§l§4Ｅｑｕｉｎｏｘ Ｅｄｇｅ§r",
  "key.categories.jjka": "Jujutsu Awakening",
- "key.jjka.mode": "Technique mode (techniques on 1-9 / scroll)",
+ "key.jjka.mode": "Technique mode (moves on 1-9, scroll picks the technique)",
  "key.jjka.prev": "Previous technique",
  "key.jjka.next": "Next technique",
- "key.jjka.use": "Use technique (without right click)"
+ "key.jjka.dash": "Dash"
 }

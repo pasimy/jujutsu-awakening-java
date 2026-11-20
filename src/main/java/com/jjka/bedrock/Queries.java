@@ -18,7 +18,15 @@ public final class Queries {
 	/** Inputs Java's server doesn't know on its own, sent up by each client: jump held */
 	public static final Map<java.util.UUID, Boolean> JUMPING = new ConcurrentHashMap<>();
 	/** a click standing in for a jump / sneak (the menu), ticks left */
-	public static final Map<java.util.UUID, Integer> PRESS_JUMP = new ConcurrentHashMap<>(), PRESS_SNEAK = new ConcurrentHashMap<>();
+	public static final Map<java.util.UUID, Integer> PRESS_JUMP = new ConcurrentHashMap<>(), PRESS_SNEAK = new ConcurrentHashMap<>(),
+			PRESS_SPRINT = new ConcurrentHashMap<>(), PRESS_LEFT = new ConcurrentHashMap<>();
+	/** a pitch to pretend the player is looking at, for "look up / down" moves: {pitch, ticks} */
+	public static final Map<java.util.UUID, float[]> PITCH = new ConcurrentHashMap<>();
+
+	public static float pitch(Entity e) {
+		float[] p = PITCH.get(e.getUUID());
+		return p != null && p[1] > 0 ? p[0] : e.getXRot();
+	}
 
 	public static Object query(Entity e, Actor a, String name, Object[] args) {
 		LivingEntity l = e instanceof LivingEntity le ? le : null;
@@ -28,7 +36,7 @@ public final class Queries {
 				if (e instanceof Player p) return JUMPING.getOrDefault(p.getUUID(), false) || PRESS_JUMP.getOrDefault(p.getUUID(), 0) > 0 || !p.onGround() && p.getDeltaMovement().y > 0.05;
 				return l != null && !l.onGround() && l.getDeltaMovement().y > 0;
 			case "is_using_item": return l != null && l.isUsingItem();
-			case "is_sprinting": return e.isSprinting();
+			case "is_sprinting": return e.isSprinting() || PRESS_SPRINT.getOrDefault(e.getUUID(), 0) > 0;
 			case "is_alive": return e.isAlive();
 			case "health": return l != null ? (double) (float) Math.ceil(l.getHealth()) : 0.0;
 			case "max_health": return l != null ? (double) l.getMaxHealth() : 0.0;

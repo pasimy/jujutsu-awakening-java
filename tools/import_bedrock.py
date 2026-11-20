@@ -154,10 +154,10 @@ def items(bp, rp, out='src/main/resources'):
             n += 1
     lang.update({
         'key.categories.jjka': 'Jujutsu Awakening',
-        'key.jjka.mode': 'Technique mode (techniques on 1-9 / scroll)',
+        'key.jjka.mode': 'Technique mode (moves on 1-9, scroll picks the technique)',
         'key.jjka.prev': 'Previous technique',
         'key.jjka.next': 'Next technique',
-        'key.jjka.use': 'Use technique (without right click)',
+        'key.jjka.dash': 'Dash',
     })
     os.makedirs(os.path.join(assets, 'lang'), exist_ok=True)
     with open(os.path.join(assets, 'lang/en_us.json'), 'w', encoding='utf-8') as fh: json.dump(lang, fh, ensure_ascii=False, indent=1)
