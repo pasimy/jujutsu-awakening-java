@@ -34,6 +34,7 @@ public final class Moves {
 	private static final Map<String, List<Move>> CACHE = new HashMap<>();
 	private static final Pattern PAREN = Pattern.compile("\\(([^()]*)\\)");
 	private static final Pattern BRACKET = Pattern.compile("\\[\\s*(.+?) to (.+?)\\s*\\]");
+	private static final Pattern DASHED = Pattern.compile("(?i)-\\s*((?:sneak\\s*\\+\\s*)?(?:right[- ]?click|left[- ]?click|click|punch)) to (.+)");
 	private static final Pattern KEY = Pattern.compile("(?i)click|punch|sneak|jump|look|sprint|m1");
 
 	public static synchronized List<Move> of(String itemId) {
@@ -61,6 +62,18 @@ public final class Moves {
 						c.contains("punch") || c.contains("m1") || c.contains("left"), c.contains("sprint")));
 			}
 			if (bracketed) continue;
+			// "- Click to give Sukuna control of your body" (the King of Curses): a plain input, then what it does
+			boolean dashed = false;
+			for (String l : lines) {
+				Matcher dm = DASHED.matcher(l);
+				if (!dm.matches()) continue;
+				dashed = true;
+				String c = dm.group(1).toLowerCase(Locale.ROOT), nm = dm.group(2).trim();
+				nm = Character.toUpperCase(nm.charAt(0)) + nm.substring(1);
+				boolean punch = c.contains("punch") || c.contains("left");
+				out.add(new Move(nm, punch ? dm.group(1).trim() : dm.group(1).trim().replaceFirst("(?i)^click$", "Right-Click"), c.contains("sneak"), false, false, false, false, punch, false));
+			}
+			if (dashed) continue;
 			if (lines.isEmpty() || lines.get(0).startsWith("-") || lines.get(0).startsWith("[")) continue;
 			String first = lines.get(0), name = first, cond = null;
 			// "(Sneak + Right Click) to Flashstep" / "Sneak + Punch to disable infinity"
