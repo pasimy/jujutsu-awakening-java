@@ -1,0 +1,27 @@
+name: Export the compile classpath
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['build.gradle', 'gradle.properties', '.github/workflows/libs.yml']
+permissions:
+  contents: write
+jobs:
+  libs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - name: Export
+        run: chmod +x gradlew && ./gradlew exportClasspath --no-daemon
+      - name: Put the classpath on the "libs" branch
+        run: |
+          cd build/cp
+          git init -q -b libs
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add -A && git commit -qm "Classpath for ${GITHUB_SHA}"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}.git" libs
