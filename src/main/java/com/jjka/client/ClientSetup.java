@@ -36,6 +36,8 @@ public final class ClientSetup {
 		});
 		forge.addListener((TickEvent.RenderTickEvent e) -> { if (e.phase == TickEvent.Phase.START) Screen.frame(); });
 		forge.addListener(Keys::interact);
+		forge.addListener(Keys::key);
+		forge.addListener(Keys::mouse);
 		forge.addListener(Keys::scroll);
 		forge.addListener((MovementInputUpdateEvent e) -> Screen.movement(e));
 		forge.addListener((ViewportEvent.ComputeCameraAngles e) -> Screen.angles(e));

@@ -114,6 +114,14 @@ public final class Items {
 		public final List<String> items = new ArrayList<>();
 		public int selected;
 		public boolean on;
+		/** the fighting style in use (null: the newest one) */
+		public String style;
+
+		public String activeStyle() {
+			if (style != null && items.contains(style)) return style;
+			for (int i = items.size() - 1; i >= 0; i--) if (style(items.get(i))) return items.get(i);
+			return null;
+		}
 
 		CompoundTag save() {
 			CompoundTag t = new CompoundTag();
@@ -122,6 +130,7 @@ public final class Items {
 			t.put("items", l);
 			t.putInt("selected", selected);
 			t.putBoolean("on", on);
+			if (style != null) t.putString("style", style);
 			return t;
 		}
 
@@ -130,6 +139,7 @@ public final class Items {
 			for (Tag s : t.getList("items", Tag.TAG_STRING)) items.add(s.getAsString());
 			selected = t.getInt("selected");
 			on = t.getBoolean("on");
+			style = t.contains("style") ? t.getString("style") : null;
 		}
 
 		public String held() { return on && selected >= 0 && selected < items.size() ? items.get(selected) : null; }
@@ -183,7 +193,7 @@ public final class Items {
 				ItemStack s = mainhand(p);
 				if (idOf(s).equals(id)) n += s.getCount();
 				// a fighting style on the technique bar is always in your fists: punching uses it whatever technique is picked
-				else if (style(id) && bar.items.contains(id) && (bar.on || p.getMainHandItem().isEmpty())) n++;
+				else if (style(id) && id.equals(bar.activeStyle()) && (bar.on || p.getMainHandItem().isEmpty())) n++;
 			}
 			case "slot.weapon.offhand" -> { ItemStack s = p.getOffhandItem(); if (idOf(s).equals(id)) n += s.getCount(); }
 			case "slot.armor.head" -> n += match(p.getItemBySlot(EquipmentSlot.HEAD), id);
@@ -250,6 +260,7 @@ public final class Items {
 				if ((locked || style(id)) && item instanceof BedrockItem) {
 					Bar b = bar(p);
 					if (!b.items.contains(id) || item.getMaxStackSize() > 1) b.items.add(id);
+					if (style(id)) b.style = id; // a new fighting style is the one you use
 					saveBar(p);
 				} else {
 					ItemStack s = new ItemStack(item, amount);

@@ -19,7 +19,7 @@ final class ClientImpl implements Net.ClientSide {
 	}
 
 	@Override public void particle(String id, double x, double y, double z) { Particles.spawn(id, new Vec3(x, y, z), null, null); }
-	@Override public void bar(List<String> items, int selected, boolean on) { Keys.bar(items, selected, on); }
+	@Override public void bar(List<String> items, int selected, boolean on, String style) { Keys.bar(items, selected, on, style); }
 	@Override public void title(String mode, String text) { Screen.title(mode, text); }
 	@Override public void titleTimes(int in, int stay, int out) { Screen.times(in, stay, out); }
 	@Override public void shake(boolean stop, float intensity, float seconds, boolean rotational) { Screen.shake(stop, intensity, seconds, rotational); }

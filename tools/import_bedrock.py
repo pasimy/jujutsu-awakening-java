@@ -158,6 +158,17 @@ def items(bp, rp, out='src/main/resources'):
         'key.jjka.prev': 'Previous technique',
         'key.jjka.next': 'Next technique',
         'key.jjka.dash': 'Dash',
+        'key.jjka.info': 'What you can use (techniques, style, moves)',
+        'key.jjka.style_hud': 'Show / hide fighting style moves',
+        'key.jjka.move1': 'Technique move 1',
+        'key.jjka.move2': 'Technique move 2',
+        'key.jjka.move3': 'Technique move 3',
+        'key.jjka.move4': 'Technique move 4',
+        'key.jjka.move5': 'Technique move 5',
+        'key.jjka.move6': 'Technique move 6',
+        'key.jjka.move7': 'Technique move 7',
+        'key.jjka.move8': 'Technique move 8',
+        'key.jjka.move9': 'Technique move 9',
     })
     os.makedirs(os.path.join(assets, 'lang'), exist_ok=True)
     with open(os.path.join(assets, 'lang/en_us.json'), 'w', encoding='utf-8') as fh: json.dump(lang, fh, ensure_ascii=False, indent=1)

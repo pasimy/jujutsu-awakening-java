@@ -106,8 +106,9 @@ public final class Server {
 		if (e.getEntity() instanceof ServerPlayer p && e.getItemStack().getItem() instanceof Items.BedrockItem b) use(p, b.id);
 	}
 
-	static void barChoice(ServerPlayer p, int selected, boolean on) {
+	static void barChoice(ServerPlayer p, int selected, boolean on, String style) {
 		Items.Bar b = Items.bar(p);
+		if (style != null && !style.isEmpty() && b.items.contains(style)) b.style = style;
 		b.selected = Math.max(0, Math.min(Math.max(0, b.items.size() - 1), selected));
 		b.on = on;
 		Items.saveBar(p);
@@ -137,14 +138,12 @@ public final class Server {
 			inv.setItem(i, net.minecraft.world.item.ItemStack.EMPTY);
 			Items.Bar bar = Items.bar(p);
 			if (!bar.items.contains(b.id)) bar.items.add(b.id);
+			bar.style = b.id;
 			Items.saveBar(p);
 		}
 	}
 
-	static String style(ServerPlayer p) {
-		for (String s : Items.bar(p).items) if (Items.style(s)) return s;
-		return null;
-	}
+	static String style(ServerPlayer p) { return Items.bar(p).activeStyle(); }
 
 	// ------------------------------------------------------------------ move keys: fake a move's inputs, then use the item
 	private record Step(int[] delay, Runnable run) {}

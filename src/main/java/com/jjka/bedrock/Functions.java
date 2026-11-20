@@ -38,6 +38,8 @@ public final class Functions {
 		Bedrock.LOG.info("Loaded {} functions, {} run every tick", functions.size(), tick.size());
 	}
 
+	public static java.util.Set<String> names() { load(); return functions.keySet(); }
+
 	public static boolean exists(String name) { load(); return functions.containsKey(clean(name)); }
 
 	private static String clean(String name) {

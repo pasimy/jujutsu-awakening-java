@@ -44,7 +44,8 @@ public final class JjkaCommand {
 							return 1;
 						})))
 				.then(net.minecraft.commands.Commands.literal("function").requires(s -> s.hasPermission(2))
-						.then(net.minecraft.commands.Commands.argument("name", StringArgumentType.greedyString()).executes(c -> {
+						.then(net.minecraft.commands.Commands.argument("name", StringArgumentType.greedyString())
+								.suggests((c, b) -> net.minecraft.commands.SharedSuggestionProvider.suggest(new java.util.TreeSet<>(Functions.names()), b)).executes(c -> {
 							ServerPlayer p = c.getSource().getPlayerOrException();
 							Scores.get(p.getServer());
 							Functions.run(StringArgumentType.getString(c, "name"), Commands.Ctx.of(p));

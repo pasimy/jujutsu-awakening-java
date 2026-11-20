@@ -18,6 +18,19 @@ public final class Moves {
 
 	public record Move(String name, String how, boolean sneak, boolean doubleSneak, boolean jump, boolean lookUp, boolean lookDown, boolean punch, boolean sprint) {}
 
+	/** How to do it on Java, with the click (or key) that triggers it */
+	public static String how(Move m, String trigger) {
+		if (m.doubleSneak()) return "Double sneak";
+		StringBuilder b = new StringBuilder();
+		if (m.sprint()) b.append("Sprint + ");
+		if (m.sneak()) b.append("Sneak + ");
+		if (m.jump()) b.append("Jump + ");
+		if (m.lookUp()) b.append("Look up + ");
+		if (m.lookDown()) b.append("Look down + ");
+		b.append(m.punch() ? "Left click" : trigger);
+		return b.toString();
+	}
+
 	private static final Map<String, List<Move>> CACHE = new HashMap<>();
 	private static final Pattern PAREN = Pattern.compile("\\(([^()]*)\\)");
 	private static final Pattern KEY = Pattern.compile("(?i)click|punch|sneak|jump|look|sprint|m1");
