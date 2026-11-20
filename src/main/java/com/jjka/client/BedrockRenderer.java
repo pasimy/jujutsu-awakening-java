@@ -241,7 +241,8 @@ public class BedrockRenderer extends EntityRenderer<BedrockEntity> {
 			RenderType rt = types.get(key);
 			if (rt == null) {
 				boolean[] em = new boolean[1];
-				rt = material(mat, tex, em);
+				rt = geo.backdrop ? Backdrop.of(tex) : material(mat, tex, em);
+				if (geo.backdrop) em[0] = true;
 				types.put(key, rt);
 				glow.put(key, em[0]);
 			}
@@ -272,5 +273,23 @@ public class BedrockRenderer extends EntityRenderer<BedrockEntity> {
 		m.add(all);
 		rc.add("materials", m);
 		return rc;
+	}
+
+	/**
+	 * A domain's sphere: Bedrock's effects 30+ blocks out (Unlimited Void's paint splashes, its rings) still show through
+	 * the sphere 25 blocks out, so it's drawn depth-tested but without hiding what comes after it.
+	 */
+	static final class Backdrop extends RenderType {
+		private Backdrop() { super("", null, null, 0, false, false, null, null); }
+
+		private static final Map<ResourceLocation, RenderType> CACHE = new HashMap<>();
+
+		static RenderType of(ResourceLocation tex) {
+			return CACHE.computeIfAbsent(tex, t -> create("jjka_backdrop", com.mojang.blaze3d.vertex.DefaultVertexFormat.NEW_ENTITY,
+					com.mojang.blaze3d.vertex.VertexFormat.Mode.QUADS, 256, false, false,
+					CompositeState.builder().setShaderState(RENDERTYPE_ENTITY_CUTOUT_NO_CULL_SHADER).setTextureState(new TextureStateShard(t, false, false))
+							.setTransparencyState(NO_TRANSPARENCY).setCullState(NO_CULL).setLightmapState(LIGHTMAP).setOverlayState(OVERLAY)
+							.setWriteMaskState(COLOR_WRITE).createCompositeState(true)));
+		}
 	}
 }

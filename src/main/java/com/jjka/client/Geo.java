@@ -22,6 +22,8 @@ public final class Geo {
 	public final int texW, texH;
 	public final List<Bone> bones = new ArrayList<>();
 	public final Map<String, Bone> byName = new LinkedHashMap<>();
+	/** a huge mesh around everything (a domain's sphere): drawn as a backdrop that doesn't hide effects beyond it */
+	public boolean backdrop;
 
 	public static final class Bone {
 		public final String name;
@@ -178,6 +180,7 @@ public final class Geo {
 				JsonArray vtx = poly.get(Math.min(i, poly.size() - 1)).getAsJsonArray();
 				JsonArray p = pos.get(vtx.get(0).getAsInt()).getAsJsonArray();
 				q[i * 5] = f(p, 0); q[i * 5 + 1] = 24 - f(p, 1); q[i * 5 + 2] = f(p, 2);
+				if (Math.abs(f(p, 0)) > 160 || Math.abs(f(p, 1)) > 160 || Math.abs(f(p, 2)) > 160) g.backdrop = true;
 				if (uv != null && vtx.size() > 2) {
 					JsonArray t = uv.get(vtx.get(2).getAsInt()).getAsJsonArray();
 					float u = f(t, 0), v = f(t, 1);
