@@ -79,16 +79,19 @@ public final class Keys {
 		boolean jump = mc.options.keyJump.isDown();
 		if (jump != jumpWas || use) {
 			jumpWas = jump;
-			Net.CHANNEL.sendToServer(new Net.Input(jump, use, false));
+			Net.CHANNEL.sendToServer(new Net.Input(jump, use, false, false));
 		}
 	}
 
 	/** Right click in technique mode uses the selected technique instead of your held item */
 	public static void interact(InputEvent.InteractionKeyMappingTriggered e) {
-		if (!e.isUseItem() || !bar.on || bar.items.isEmpty()) return;
+		boolean jump = Minecraft.getInstance().options.keyJump.isDown();
+		if (e.isAttack()) { Net.CHANNEL.sendToServer(new Net.Input(jump, false, true, false)); return; }
+		if (e.isUseItem() && (!bar.on || bar.items.isEmpty())) { Net.CHANNEL.sendToServer(new Net.Input(jump, false, false, true)); return; }
+		if (!e.isUseItem()) return;
 		e.setCanceled(true);
 		e.setSwingHand(false);
-		Net.CHANNEL.sendToServer(new Net.Input(Minecraft.getInstance().options.keyJump.isDown(), true, false));
+		Net.CHANNEL.sendToServer(new Net.Input(jump, true, false, true));
 	}
 
 	public static void scroll(InputEvent.MouseScrollingEvent e) {

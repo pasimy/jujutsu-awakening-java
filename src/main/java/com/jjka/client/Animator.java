@@ -39,7 +39,7 @@ public final class Animator implements Molang.Scope {
 	static final class Inst {
 		final Anim anim;
 		double time, delay;
-		boolean done;
+		boolean done, completed;
 
 		Inst(Anim a) { anim = a; }
 	}
@@ -146,9 +146,14 @@ public final class Animator implements Molang.Scope {
 		}
 		for (Iterator<Runtime> it = runtime.iterator(); it.hasNext();) {
 			Runtime r = it.next();
-			boolean stopNow = r.stop != null && Molang.truth(r.stop.eval(this));
 			advance(r.inst);
-			if (stopNow || r.inst.done && !r.inst.anim.loop.equals("hold_on_last_frame")) { it.remove(); continue; }
+			// Bedrock's default stop expression is query.any_animation_finished: one play through, even for looping ones
+			stateScope = new HashMap<>();
+			if (r.inst.completed) r.inst.done = true;
+			stateScope.put("runtime", r.inst);
+			boolean stopNow = r.stop != null ? Molang.truth(r.stop.eval(this)) : r.inst.completed;
+			stateScope = null;
+			if (stopNow) { it.remove(); continue; }
 			animTime = r.inst.time;
 			r.inst.anim.apply(this, r.inst.time, 1f, pose);
 		}
@@ -237,6 +242,7 @@ public final class Animator implements Molang.Scope {
 		if (a.timeUpdate != null) { animTime = i.time; i.time = Molang.num(a.timeUpdate.eval(this)); }
 		else i.time += deltaTime;
 		if (a.length > 0 && i.time >= a.length) {
+			i.completed = true;
 			if (a.loop.equals("true")) {
 				fire(a, prev, a.length);
 				i.time = i.time % a.length;
@@ -247,7 +253,8 @@ public final class Animator implements Molang.Scope {
 				i.done = true;
 				return;
 			}
-		} else if (a.length <= 0 && !a.loop.equals("true") && a.bones.isEmpty()) i.done = true;
+		} else if (a.length <= 0 && !a.loop.equals("true") && a.bones.isEmpty()) i.done = i.completed = true;
+		else if (a.length <= 0 && i.time > 0) i.completed = true;
 		fire(a, prev, i.time);
 	}
 

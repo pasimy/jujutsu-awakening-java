@@ -155,7 +155,12 @@ public final class Items {
 		Bar bar = bar(p);
 		int n = 0;
 		switch (loc) {
-			case "slot.weapon.mainhand" -> { ItemStack s = mainhand(p); if (idOf(s).equals(id)) n += s.getCount(); }
+			case "slot.weapon.mainhand" -> {
+				ItemStack s = mainhand(p);
+				if (idOf(s).equals(id)) n += s.getCount();
+				// a fighting style on the technique bar is always in your fists: punching uses it whatever technique is picked
+				else if (style(id) && bar.items.contains(id) && (bar.on || p.getMainHandItem().isEmpty())) n++;
+			}
 			case "slot.weapon.offhand" -> { ItemStack s = p.getOffhandItem(); if (idOf(s).equals(id)) n += s.getCount(); }
 			case "slot.armor.head" -> n += match(p.getItemBySlot(EquipmentSlot.HEAD), id);
 			case "slot.armor.chest" -> n += match(p.getItemBySlot(EquipmentSlot.CHEST), id);
@@ -177,6 +182,9 @@ public final class Items {
 		}
 		return n;
 	}
+
+	/** Fighting styles: the add-on's "fists" / "combat" items you punch with */
+	static boolean style(String id) { return id.endsWith("fists") || id.endsWith("_combat") || id.endsWith("combat_style"); }
 
 	private static int match(ItemStack s, String id) { return !s.isEmpty() && idOf(s).equals(id) ? s.getCount() : 0; }
 

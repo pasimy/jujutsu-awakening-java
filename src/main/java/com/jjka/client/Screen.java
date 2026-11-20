@@ -297,6 +297,8 @@ public final class Screen {
 		for (int i = 0; i < s.length(); i++) {
 			char c = s.charAt(i);
 			if (c >= 0xE000 && c <= 0xF8FF) {
+				// the big sheets are whole-screen pictures (menu backgrounds, letterbox bars, impact frames): they fill the screen
+				if (cell(String.format("%02x", c >> 8)) >= 400) { cover(g, c, alpha); continue; }
 				if (run.length() > 0) { parts.add(run.toString()); run = new StringBuilder(fmt); }
 				parts.add(c);
 			} else {
@@ -335,6 +337,18 @@ public final class Screen {
 				x += gs;
 			}
 		}
+	}
+
+	private static void cover(GuiGraphics g, char ch, float alpha) {
+		ResourceLocation tex = new ResourceLocation(Bedrock.MODID, "textures/glyph/" + String.format("%04x", (int) ch) + ".png");
+		if (!BedrockRenderer.exists(tex)) return;
+		Minecraft mc = Minecraft.getInstance();
+		int w = mc.getWindow().getGuiScaledWidth(), h = mc.getWindow().getGuiScaledHeight();
+		int side = Math.max(w, h);
+		RenderSystem.enableBlend();
+		g.setColor(1, 1, 1, alpha);
+		g.blit(tex, (w - side) / 2, (h - side) / 2, 0, 0, side, side, side, side);
+		g.setColor(1, 1, 1, 1);
 	}
 
 	public static void hud(RenderGuiOverlayEvent.Post e) {

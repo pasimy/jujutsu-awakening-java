@@ -67,6 +67,10 @@ public final class Server {
 		}
 		USED.clear();
 		USED_ITEM.clear();
+		Queries.PRESS_JUMP.replaceAll((k, v) -> v - 1);
+		Queries.PRESS_JUMP.values().removeIf(v -> v < 0);
+		Queries.PRESS_SNEAK.replaceAll((k, v) -> v - 1);
+		Queries.PRESS_SNEAK.values().removeIf(v -> v < 0);
 		for (ServerPlayer p : server.getPlayerList().getPlayers()) {
 			Actor a = Actor.of(p);
 			a.variables.put("attack_time", (double) p.getAttackAnim(1f));
@@ -108,8 +112,13 @@ public final class Server {
 
 	private static final Set<UUID> FROZEN = new HashSet<>();
 
-	static void input(ServerPlayer p, boolean jump, boolean use, boolean attack) {
+	static void input(ServerPlayer p, boolean jump, boolean use, boolean attack, boolean right) {
 		Queries.JUMPING.put(p.getUUID(), jump);
+		// the add-on's menu is driven by jump (select) and sneak (next); on Java, left / right click do the same
+		if (p.getTags().contains("menu")) {
+			if (attack) Queries.PRESS_JUMP.put(p.getUUID(), 3);
+			if (right) Queries.PRESS_SNEAK.put(p.getUUID(), 3);
+		}
 		if (use) {
 			String held = Items.bar(p).held();
 			if (held != null) use(p, held);

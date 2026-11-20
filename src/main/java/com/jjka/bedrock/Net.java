@@ -165,13 +165,13 @@ public final class Net {
 	}
 
 	/** client -> server: keys Java's server can't see (jump held), and "use the selected technique" */
-	public record Input(boolean jump, boolean use, boolean attack) {
-		Input(FriendlyByteBuf b) { this(b.readBoolean(), b.readBoolean(), b.readBoolean()); }
-		void write(FriendlyByteBuf b) { b.writeBoolean(jump); b.writeBoolean(use); b.writeBoolean(attack); }
+	public record Input(boolean jump, boolean use, boolean attack, boolean right) {
+		Input(FriendlyByteBuf b) { this(b.readBoolean(), b.readBoolean(), b.readBoolean(), b.readBoolean()); }
+		void write(FriendlyByteBuf b) { b.writeBoolean(jump); b.writeBoolean(use); b.writeBoolean(attack); b.writeBoolean(right); }
 		void handle(Supplier<NetworkEvent.Context> c) {
 			NetworkEvent.Context ctx = c.get();
 			ServerPlayer p = ctx.getSender();
-			ctx.enqueueWork(() -> { if (p != null) Server.input(p, jump, use, attack); });
+			ctx.enqueueWork(() -> { if (p != null) Server.input(p, jump, use, attack, right); });
 			ctx.setPacketHandled(true);
 		}
 	}

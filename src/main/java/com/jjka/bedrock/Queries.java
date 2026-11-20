@@ -17,13 +17,15 @@ public final class Queries {
 
 	/** Inputs Java's server doesn't know on its own, sent up by each client: jump held */
 	public static final Map<java.util.UUID, Boolean> JUMPING = new ConcurrentHashMap<>();
+	/** a click standing in for a jump / sneak (the menu), ticks left */
+	public static final Map<java.util.UUID, Integer> PRESS_JUMP = new ConcurrentHashMap<>(), PRESS_SNEAK = new ConcurrentHashMap<>();
 
 	public static Object query(Entity e, Actor a, String name, Object[] args) {
 		LivingEntity l = e instanceof LivingEntity le ? le : null;
 		switch (name.toLowerCase(Locale.ROOT)) {
-			case "is_sneaking": return e.isShiftKeyDown() || e.isCrouching();
+			case "is_sneaking": return e.isShiftKeyDown() || e.isCrouching() || PRESS_SNEAK.getOrDefault(e.getUUID(), 0) > 0;
 			case "is_jumping":
-				if (e instanceof Player p) return JUMPING.getOrDefault(p.getUUID(), false) || !p.onGround() && p.getDeltaMovement().y > 0.05;
+				if (e instanceof Player p) return JUMPING.getOrDefault(p.getUUID(), false) || PRESS_JUMP.getOrDefault(p.getUUID(), 0) > 0 || !p.onGround() && p.getDeltaMovement().y > 0.05;
 				return l != null && !l.onGround() && l.getDeltaMovement().y > 0;
 			case "is_using_item": return l != null && l.isUsingItem();
 			case "is_sprinting": return e.isSprinting();
