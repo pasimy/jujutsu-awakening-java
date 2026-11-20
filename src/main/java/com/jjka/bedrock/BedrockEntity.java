@@ -45,7 +45,7 @@ import net.minecraftforge.registries.RegistryObject;
  * Every entity in the behaviour pack (ds:projectile, ds:lapse_explode, curses, shikigami ...) is one of these, driven by its
  * definition: health, size, physics, explode, timers, sensors, damage sensor, events and a set of AI behaviours.
  */
-public class BedrockEntity extends PathfinderMob {
+public class BedrockEntity extends PathfinderMob implements net.minecraft.world.entity.OwnableEntity {
 	public record Kind(EntityDef def, RegistryObject<EntityType<BedrockEntity>> type) {}
 
 	private static final Map<String, Kind> KINDS = new HashMap<>();
@@ -224,7 +224,13 @@ public class BedrockEntity extends PathfinderMob {
 				case "look_at_player", "look_at_entity" -> goalSelector.addGoal(pri, new LookAtPlayerGoal(this, Player.class, b.has("look_distance") ? b.get("look_distance").getAsFloat() : 8f));
 				case "random_look_around" -> goalSelector.addGoal(pri, new RandomLookAroundGoal(this));
 				case "move_towards_target" -> goalSelector.addGoal(pri, new MoveTowardsTargetGoal(this, speed, b.has("within_radius") ? b.get("within_radius").getAsFloat() : 16f));
-				case "hurt_by_target" -> targetSelector.addGoal(pri, new HurtByTargetGoal(this));
+				case "hurt_by_target" -> targetSelector.addGoal(pri, new HurtByTargetGoal(this) {
+					@Override public boolean canUse() { return super.canUse() && !friendly(mob.getLastHurtByMob()); }
+				});
+				case "follow_owner" -> goalSelector.addGoal(pri, new FollowOwner(speed, b.has("start_distance") ? b.get("start_distance").getAsFloat() : 10f, b.has("stop_distance") ? b.get("stop_distance").getAsFloat() : 2f));
+				case "teleport_to_owner" -> goalSelector.addGoal(pri, new TeleportToOwner());
+				case "owner_hurt_by_target" -> targetSelector.addGoal(pri, new OwnerTarget(true));
+				case "owner_hurt_target" -> targetSelector.addGoal(pri, new OwnerTarget(false));
 				case "nearest_attackable_target", "nearest_prioritized_attackable_target" -> targetSelector.addGoal(pri, target(b));
 				default -> { }
 			}
@@ -240,6 +246,7 @@ public class BedrockEntity extends PathfinderMob {
 			else if (t.isJsonObject()) types.add(t.getAsJsonObject());
 		}
 		Predicate<LivingEntity> pick = target -> {
+			if (friendly(target)) return false;
 			if (types.isEmpty()) return target instanceof Player;
 			for (JsonObject t : types) {
 				double max = t.has("max_dist") ? t.get("max_dist").getAsDouble() : 32;
@@ -249,6 +256,97 @@ public class BedrockEntity extends PathfinderMob {
 			return false;
 		};
 		return new NearestAttackableTargetGoal<>(this, LivingEntity.class, 10, mustSee, false, pick);
+	}
+
+	// ------------------------------------------------------------------ owners (shikigami, summons)
+	private java.util.UUID ownerId;
+
+	@Override public java.util.UUID getOwnerUUID() { return ownerId; }
+
+	@Override
+	public LivingEntity getOwner() {
+		if (ownerId == null) return null;
+		Player p = level().getPlayerByUUID(ownerId);
+		if (p != null) return p;
+		return level() instanceof ServerLevel sl && sl.getEntity(ownerId) instanceof LivingEntity l ? l : null;
+	}
+
+	public void setOwner(Entity e) { ownerId = e == null ? null : e.getUUID(); }
+
+	/** the owner, or something else the same owner summoned: never a target */
+	boolean friendly(Entity t) {
+		if (t == null || ownerId == null) return false;
+		return t.getUUID().equals(ownerId) || t instanceof BedrockEntity b && ownerId.equals(b.ownerId);
+	}
+
+	private final class FollowOwner extends net.minecraft.world.entity.ai.goal.Goal {
+		final double speed; final float start, stop;
+		FollowOwner(double speed, float start, float stop) { this.speed = speed; this.start = start; this.stop = stop; setFlags(java.util.EnumSet.of(Flag.MOVE, Flag.LOOK)); }
+		@Override public boolean canUse() { LivingEntity o = getOwner(); return o != null && !o.isSpectator() && getTarget() == null && distanceTo(o) > start; }
+		@Override public boolean canContinueToUse() { LivingEntity o = getOwner(); return o != null && getTarget() == null && distanceTo(o) > stop && !getNavigation().isDone(); }
+		@Override public void tick() { LivingEntity o = getOwner(); if (o == null) return; getLookControl().setLookAt(o, 10f, getMaxHeadXRot()); if (tickCount % 10 == 0) getNavigation().moveTo(o, speed); }
+		@Override public void stop() { getNavigation().stop(); }
+	}
+
+	private final class TeleportToOwner extends net.minecraft.world.entity.ai.goal.Goal {
+		@Override public boolean canUse() { LivingEntity o = getOwner(); return o != null && o.level() == level() && distanceTo(o) > 12; }
+		@Override public void start() {
+			LivingEntity o = getOwner();
+			if (o == null) return;
+			double a = random.nextDouble() * Math.PI * 2;
+			teleportTo(o.getX() + Math.cos(a) * 2, o.getY(), o.getZ() + Math.sin(a) * 2);
+			getNavigation().stop();
+		}
+	}
+
+	private final class OwnerTarget extends net.minecraft.world.entity.ai.goal.target.TargetGoal {
+		final boolean defend;
+		LivingEntity pick;
+		int stamp;
+		OwnerTarget(boolean defend) { super(BedrockEntity.this, false); this.defend = defend; setFlags(java.util.EnumSet.of(Flag.TARGET)); }
+		@Override public boolean canUse() {
+			LivingEntity o = getOwner();
+			if (o == null) return false;
+			pick = defend ? o.getLastHurtByMob() : o.getLastHurtMob();
+			int s = defend ? o.getLastHurtByMobTimestamp() : o.getLastHurtMobTimestamp();
+			return pick != null && s != stamp && pick.isAlive() && !friendly(pick) && pick != BedrockEntity.this;
+		}
+		@Override public void start() {
+			LivingEntity o = getOwner();
+			if (o != null) stamp = defend ? o.getLastHurtByMobTimestamp() : o.getLastHurtMobTimestamp();
+			mob.setTarget(pick);
+			super.start();
+		}
+	}
+
+	/** minecraft:transformation: become another entity (Ten Shadows' familiar turns into the shikigami) */
+	private int transformIn = -1;
+
+	private void transform(ServerLevel sl, Actor a) {
+		JsonObject t = a.component("minecraft:transformation");
+		if (t == null || !t.has("into")) { transformIn = -1; return; }
+		if (transformIn < 0) {
+			JsonElement d = t.get("delay");
+			double secs = d == null ? 0 : d.isJsonObject() ? (d.getAsJsonObject().has("value") ? d.getAsJsonObject().get("value").getAsDouble() : 0) : d.getAsDouble();
+			transformIn = (int) Math.round(secs * 20);
+		}
+		if (transformIn-- > 0) return;
+		String into = t.get("into").getAsString(), ev = null;
+		int lt = into.indexOf('<');
+		if (lt >= 0) { ev = into.substring(lt + 1, into.lastIndexOf('>') > lt ? into.lastIndexOf('>') : into.length()); into = into.substring(0, lt); }
+		net.minecraft.world.entity.EntityType<?> et = Types.javaType(into);
+		if (et == null) { Bedrock.warnOnce("transform", "Can't transform into unknown entity " + into); discard(); return; }
+		Entity e = et.create(sl);
+		if (e == null) { discard(); return; }
+		e.moveTo(getX(), getY(), getZ(), getYRot(), getXRot());
+		e.setYHeadRot(getYHeadRot());
+		if (e instanceof LivingEntity l) l.yBodyRot = yBodyRot;
+		if (hasCustomName()) e.setCustomName(getCustomName());
+		boolean keep = t.has("keep_owner") && t.get("keep_owner").getAsBoolean();
+		if (e instanceof BedrockEntity b) { if (keep) b.ownerId = ownerId; b.spawnEvent(ev); }
+		sl.addFreshEntity(e);
+		if (e instanceof BedrockEntity b) Actor.of(b).spawnedOnce(ev);
+		discard();
 	}
 
 	// ------------------------------------------------------------------ ticking
@@ -264,6 +362,8 @@ public class BedrockEntity extends PathfinderMob {
 			String ev = entityData.get(SPAWN_EVENT);
 			a.spawnedOnce(ev.isEmpty() ? null : ev);
 			a.tick();
+			if (isAlive()) transform(sl, a);
+			if (isRemoved()) return;
 			if (isAlive()) roar(sl, a);
 			if (isAlive()) despawn(a);
 			if (flying != null && isAlive()) fly(sl);
@@ -474,12 +574,14 @@ public class BedrockEntity extends PathfinderMob {
 	public void addAdditionalSaveData(CompoundTag tag) {
 		super.addAdditionalSaveData(tag);
 		tag.putString("SpawnEvent", entityData.get(SPAWN_EVENT));
+		if (ownerId != null) tag.putUUID("JjkaOwner", ownerId);
 	}
 
 	@Override
 	public void readAdditionalSaveData(CompoundTag tag) {
 		super.readAdditionalSaveData(tag);
 		entityData.set(SPAWN_EVENT, tag.getString("SpawnEvent"));
+		ownerId = tag.hasUUID("JjkaOwner") ? tag.getUUID("JjkaOwner") : null;
 	}
 
 	// ------------------------------------------------------------------ riding (minecraft:rideable)

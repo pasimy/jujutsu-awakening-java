@@ -197,7 +197,9 @@ public final class Server {
 		if (index < 0 || index >= moves.size()) return;
 		Moves.Move m = moves.get(index);
 		int t = 6;
-		if (m.sneak()) Queries.PRESS_SNEAK.put(id, t);
+		// sneak lasts as long as the item is held: a sneak + punch move must not end as a plain punch with the item still in hand
+		// (the Shadow Wheel's unequip turned into an equip)
+		if (m.sneak()) Queries.PRESS_SNEAK.put(id, t + 6);
 		if (m.jump()) Queries.PRESS_JUMP.put(id, t);
 		if (m.sprint()) Queries.PRESS_SPRINT.put(id, t);
 		Queries.PITCH.put(id, new float[] { m.lookDown() ? 85 : m.lookUp() ? -85 : Math.max(-60, Math.min(60, p.getXRot())), t + 2 });
@@ -413,6 +415,57 @@ public final class Server {
 			a.timers.put("timer", left);
 		}
 		if (!comps.has("minecraft:timer")) a.timers.remove("timer");
+	}
+
+	/** minecraft:spawn_entity: Ten Shadows' shikigami and the like are spawned by a component group on the player */
+	static void spawners(Actor a) {
+		if (!(a.entity.level() instanceof ServerLevel sl)) return;
+		spawners(a, sl, "", a.def.components);
+		for (String g : new ArrayList<>(a.groups)) spawners(a, sl, g, a.def.groups.get(g));
+	}
+
+	private static void spawners(Actor a, ServerLevel sl, String group, JsonObject comps) {
+		if (comps == null || !comps.has("minecraft:spawn_entity") || !comps.get("minecraft:spawn_entity").isJsonObject()) return;
+		JsonObject se = comps.getAsJsonObject("minecraft:spawn_entity");
+		JsonElement en = se.has("entities") ? se.get("entities") : se;
+		List<JsonObject> list = new ArrayList<>();
+		if (en.isJsonArray()) { for (JsonElement x : en.getAsJsonArray()) if (x.isJsonObject()) list.add(x.getAsJsonObject()); }
+		else if (en.isJsonObject()) list.add(en.getAsJsonObject());
+		for (int i = 0; i < list.size(); i++) {
+			JsonObject s = list.get(i);
+			String key = "spawn:" + group + ":" + i;
+			Integer left = a.timers.get(key);
+			if (left == null) {
+				double min = s.has("min_wait_time") ? s.get("min_wait_time").getAsDouble() : 300, max = s.has("max_wait_time") ? s.get("max_wait_time").getAsDouble() : 600;
+				left = (int) Math.round((min + Math.random() * Math.max(0, max - min)) * 20);
+			}
+			if (left == Integer.MAX_VALUE) continue;
+			if (left-- > 0) { a.timers.put(key, left); continue; }
+			boolean single = s.has("single_use") && s.get("single_use").getAsBoolean();
+			if (single) a.timers.put(key, Integer.MAX_VALUE); else a.timers.remove(key);
+			int n = s.has("num_to_spawn") ? s.get("num_to_spawn").getAsInt() : 1;
+			String type = s.has("spawn_entity") ? s.get("spawn_entity").getAsString() : null;
+			String ev = s.has("spawn_event") ? s.get("spawn_event").getAsString() : null;
+			if (type != null) for (int k = 0; k < n; k++) spawn(sl, a.entity, type, ev);
+			else if (s.has("spawn_item")) {
+				net.minecraft.world.item.Item it = Items.item(Bedrock.id(s.get("spawn_item").getAsString()));
+				if (it != null) a.entity.spawnAtLocation(new net.minecraft.world.item.ItemStack(it, n));
+			}
+		}
+	}
+
+	private static void spawn(ServerLevel sl, Entity at, String type, String ev) {
+		net.minecraft.world.entity.EntityType<?> et = Types.javaType(type);
+		if (et == null) { Bedrock.warnOnce("spawn_entity", "Can't spawn unknown entity " + type); return; }
+		Entity e = et.create(sl);
+		if (e == null) return;
+		e.moveTo(at.getX(), at.getY(), at.getZ(), at.getYRot(), 0);
+		e.setYHeadRot(at.getYRot());
+		if (e instanceof net.minecraft.world.entity.LivingEntity l) l.yBodyRot = at.getYRot();
+		String event = ev == null || ev.equals("minecraft:entity_born") || ev.equals("minecraft:entity_spawned") ? null : ev;
+		if (e instanceof BedrockEntity b) { b.spawnEvent(event); b.setOwner(at); }
+		sl.addFreshEntity(e);
+		if (e instanceof BedrockEntity b) Actor.of(b).spawnedOnce(event);
 	}
 
 	static void sensors(Actor a) {

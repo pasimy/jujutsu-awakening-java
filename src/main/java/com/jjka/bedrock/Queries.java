@@ -109,7 +109,7 @@ public final class Queries {
 			case "is_first_person_view": return false;
 			case "distance_from_camera": return 0.0;
 			case "rider_body_y_rotation": return e.getVehicle() instanceof LivingEntity v ? (double) v.yBodyRot : 0.0;
-			case "is_tamed": return false;
+			case "is_tamed": return a != null && a.has("minecraft:is_tamed");
 			case "position": {
 				int axis = args.length > 0 ? (int) Molang.num(args[0]) : 0;
 				return axis == 0 ? e.getX() : axis == 1 ? e.getY() : e.getZ();

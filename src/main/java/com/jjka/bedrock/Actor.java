@@ -147,8 +147,10 @@ public final class Actor implements Molang.Scope {
 	private void run(JsonObject ev, Filters.Ctx ctx, int depth) {
 		if (depth > 16) return;
 		if (ev.has("filters") && !Filters.test(ev.get("filters"), ctx)) return;
-		if (ev.has("remove")) for (String g : list(ev.getAsJsonObject("remove"), "component_groups")) if (groups.remove(g)) changed();
+		if (ev.has("remove")) for (String g : list(ev.getAsJsonObject("remove"), "component_groups")) if (groups.remove(g)) { changed(); timers.keySet().removeIf(k -> k.startsWith("spawn:" + g + ":")); }
 		if (ev.has("add")) for (String g : list(ev.getAsJsonObject("add"), "component_groups")) {
+			// (re)adding a group starts its components over: a single-use spawner spawns again
+			timers.keySet().removeIf(k -> k.startsWith("spawn:" + g + ":"));
 			groups.remove(g);
 			groups.add(g);
 			changed();
@@ -261,6 +263,7 @@ public final class Actor implements Molang.Scope {
 	void tick() {
 		if (def == null) return;
 		Server.timers(this);
+		Server.spawners(this);
 		Server.sensors(this);
 		Server.controllers(this);
 		apply();
@@ -293,6 +296,10 @@ public final class Actor implements Molang.Scope {
 		t.putInt("variant", variant);
 		t.putInt("mark_variant", markVariant);
 		t.putInt("skin_id", skinId);
+		// single-use spawners already spent (Ten Shadows' summons): not again on the next load
+		net.minecraft.nbt.ListTag spent = new net.minecraft.nbt.ListTag();
+		for (var en : timers.entrySet()) if (en.getKey().startsWith("spawn:") && en.getValue() == Integer.MAX_VALUE) spent.add(net.minecraft.nbt.StringTag.valueOf(en.getKey()));
+		t.put("spawned", spent);
 		return t;
 	}
 
@@ -315,6 +322,7 @@ public final class Actor implements Molang.Scope {
 		variant = t.getInt("variant");
 		markVariant = t.getInt("mark_variant");
 		skinId = t.getInt("skin_id");
+		for (Tag s : t.getList("spawned", Tag.TAG_STRING)) timers.put(s.getAsString(), Integer.MAX_VALUE);
 		changed();
 		spawned = true;
 	}
