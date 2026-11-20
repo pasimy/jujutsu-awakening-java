@@ -29,6 +29,12 @@ public final class PlayerAnims {
 
 		@Override
 		public void setupAnim(AbstractClientPlayer p, float limbSwing, float limbAmount, float age, float headYaw, float headPitch) {
+			// Java's setupAnim doesn't put everything back (scale, some offsets): start each frame from the rest pose,
+			// otherwise an animation's scale multiplies up frame after frame (stretched arms)
+			for (ModelPart part : new ModelPart[] { head, hat, this.body, jacket, rightArm, leftArm, rightSleeve, leftSleeve, rightLeg, leftLeg, rightPants, leftPants }) {
+				part.resetPose();
+				part.xScale = part.yScale = part.zScale = 1f;
+			}
 			super.setupAnim(p, limbSwing, limbAmount, age, headYaw, headPitch);
 			root = waist = bodyPose = null;
 			Animator a = Animator.peek(p);

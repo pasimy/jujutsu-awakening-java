@@ -90,6 +90,8 @@ public final class Screen {
 
 	// ------------------------------------------------------------------ cutscene camera (camera set minecraft:free)
 	private static Marker cam;
+
+	static boolean camOn() { Minecraft mc = Minecraft.getInstance(); return cam != null && mc.getCameraEntity() == cam; }
 	private static Vec3 camFrom, camTo;
 	private static float yFrom, pFrom, yTo, pTo;
 	private static double camStart, camEase;

@@ -105,6 +105,31 @@ public class BedrockRenderer extends EntityRenderer<BedrockEntity> {
 
 	private static final Map<String, Boolean> TEXTURES = new HashMap<>();
 
+	/**
+	 * A Bedrock texture path: the add-on's own copy, or else Java's copy of a vanilla Bedrock texture the add-on borrows
+	 * (textures/blocks/wool_colored_white -> minecraft:textures/block/white_wool ...).
+	 */
+	static ResourceLocation texture(String bedrock) {
+		ResourceLocation own = Bedrock.texture(bedrock);
+		if (exists(own)) return own;
+		String p = bedrock.toLowerCase(Locale.ROOT).replace(".png", "");
+		String name = p.substring(p.lastIndexOf('/') + 1);
+		java.util.List<String> tries = new java.util.ArrayList<>();
+		if (p.startsWith("textures/blocks/")) {
+			if (name.startsWith("wool_colored_")) tries.add("block/" + name.substring(13) + "_wool");
+			if (name.startsWith("concrete_")) tries.add("block/" + name.substring(9) + "_concrete");
+			if (name.startsWith("glass_")) tries.add("block/" + name.substring(6) + "_stained_glass");
+			tries.add("block/" + name);
+		} else if (p.startsWith("textures/items/")) tries.add("item/" + name);
+		else if (p.startsWith("textures/particle/")) tries.add("particle/" + name);
+		else if (p.startsWith("textures/entity/")) tries.add(p.substring("textures/".length()));
+		for (String t : tries) {
+			ResourceLocation rl = new ResourceLocation("minecraft", "textures/" + t + ".png");
+			if (exists(rl)) return rl;
+		}
+		return own;
+	}
+
 	static boolean exists(ResourceLocation rl) {
 		return TEXTURES.computeIfAbsent(rl.toString(), k -> Minecraft.getInstance().getResourceManager().getResource(rl).isPresent());
 	}
@@ -159,7 +184,7 @@ public class BedrockRenderer extends EntityRenderer<BedrockEntity> {
 				if (t instanceof String str) texName = str;
 			} else texName = (String) s.other("texture.default");
 			if (texName == null) continue;
-			ResourceLocation tex = Bedrock.texture(texName);
+			ResourceLocation tex = texture(texName);
 			if (!exists(tex)) continue;
 			// materials per bone (later entries win), visibility per bone
 			List<String[]> mats = new ArrayList<>();

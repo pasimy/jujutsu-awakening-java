@@ -128,8 +128,11 @@ public final class Bedrock {
 
 	/** "textures/entity/x" -> jjka:textures/entity/x.png */
 	public static ResourceLocation texture(String bedrockPath) {
-		String p = bedrockPath.toLowerCase(Locale.ROOT).endsWith(".png") ? bedrockPath : bedrockPath + ".png";
-		return new ResourceLocation(MODID, safe(p));
+		String p = safe(bedrockPath.toLowerCase(Locale.ROOT).endsWith(".png") ? bedrockPath : bedrockPath + ".png");
+		// not under textures/particle: Java stitches every mod's textures/particle/ into its own particle atlas, and the
+		// add-on's hundreds of big effect textures made it far too large for the graphics card (vanilla particles turned black)
+		if (p.startsWith("textures/particle/")) p = "textures/bparticle/" + p.substring("textures/particle/".length());
+		return new ResourceLocation(MODID, p);
 	}
 
 	public static ResourceLocation sound(String bedrockName) { return new ResourceLocation(MODID, safe(bedrockName)); }

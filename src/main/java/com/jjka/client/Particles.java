@@ -57,7 +57,7 @@ public final class Particles {
 			JsonObject d = pe.getAsJsonObject("description");
 			JsonObject brp = d.has("basic_render_parameters") ? d.getAsJsonObject("basic_render_parameters") : new JsonObject();
 			String tex = brp.has("texture") ? brp.get("texture").getAsString() : "textures/particle/particles";
-			texture = Bedrock.texture(tex);
+			texture = BedrockRenderer.texture(tex);
 			material = brp.has("material") ? brp.get("material").getAsString() : "particles_alpha";
 			c = pe.has("components") ? pe.getAsJsonObject("components") : new JsonObject();
 			events = pe.has("events") ? pe.getAsJsonObject("events") : new JsonObject();
@@ -502,6 +502,9 @@ public final class Particles {
 	private static long last = System.nanoTime();
 
 	/** Simulate and draw; called once a frame after the world's particles */
+	/** debugging: only draw the effects this accepts */
+	public static java.util.function.Predicate<String> SHOW;
+
 	public static void render(PoseStack ps, Camera cam) {
 		long nowN = System.nanoTime();
 		double dt = Math.min(0.1, (nowN - last) / 1e9);
@@ -523,7 +526,7 @@ public final class Particles {
 		if (EMITTERS.isEmpty()) return;
 		Vec3 cp = cam.getPosition();
 		Map<String, List<Emitter>> batches = new HashMap<>();
-		for (Emitter e : EMITTERS) if (!e.particles.isEmpty()) batches.computeIfAbsent(e.d.texture + "|" + e.d.material, k -> new ArrayList<>()).add(e);
+		for (Emitter e : EMITTERS) if (!e.particles.isEmpty() && (SHOW == null || SHOW.test(e.d.id))) batches.computeIfAbsent(e.d.texture + "|" + e.d.material, k -> new ArrayList<>()).add(e);
 		RenderSystem.enableBlend();
 		RenderSystem.enableDepthTest();
 		RenderSystem.depthMask(false);
@@ -567,7 +570,8 @@ public final class Particles {
 		if (bb == null) return;
 		float[] size = vec(bb.get("size"), p.s, 0.1f);
 		float w = size[0], h = size.length > 1 ? size[1] : size[0];
-		if (w == 0 && h == 0) return;
+		// a size that has shrunk past zero draws nothing (several effects shrink to negative sizes before they expire)
+		if (w <= 0 || h <= 0) return;
 		String mode = bb.has("facing_camera_mode") ? bb.get("facing_camera_mode").getAsString() : "rotate_xyz";
 		Vec3 pos = p.pos;
 		Vector3f right, up;

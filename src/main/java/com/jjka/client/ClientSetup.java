@@ -35,6 +35,11 @@ public final class ClientSetup {
 			else MenuScreen.update();
 		});
 		forge.addListener((TickEvent.RenderTickEvent e) -> { if (e.phase == TickEvent.Phase.START) Screen.frame(); });
+		// while the add-on's cutscene camera is on: no first-person hand floating in view, no name tag over your own head
+		forge.addListener((net.minecraftforge.client.event.RenderHandEvent e) -> { if (Screen.camOn()) e.setCanceled(true); });
+		forge.addListener((net.minecraftforge.client.event.RenderNameTagEvent e) -> {
+			if (Screen.camOn() && e.getEntity() == net.minecraft.client.Minecraft.getInstance().player) e.setResult(net.minecraftforge.eventbus.api.Event.Result.DENY);
+		});
 		forge.addListener(Keys::interact);
 		forge.addListener(Keys::key);
 		forge.addListener(Keys::mouse);

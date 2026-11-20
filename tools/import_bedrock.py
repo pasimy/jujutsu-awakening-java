@@ -84,6 +84,8 @@ def main(bp, rp, out='src/main/resources'):
             if low.startswith('textures/') or low.startswith('sounds/') and not low.endswith('.json'):
                 if low.endswith('.fsb') or low.endswith('.mp3'): continue  # (Java can't play these)
                 key = safe(rel)
+                # Java puts every textures/particle/ texture into its own particle atlas: keep the add-on's elsewhere
+                if key.startswith('textures/particle/'): key = 'textures/bparticle/' + key[len('textures/particle/'):]
                 if key in seen and seen[key] != rel: print('name clash:', rel, seen[key])
                 seen[key] = rel
                 dst = os.path.join(assets, key)
