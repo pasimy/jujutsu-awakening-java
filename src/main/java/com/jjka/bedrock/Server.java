@@ -81,12 +81,13 @@ public final class Server {
 		try { Functions.tick(server); } catch (Throwable t) { Bedrock.warnOnce("tick", "Tick functions failed: " + t); }
 		try { Scripts.tick(server); } catch (Throwable t) { Bedrock.warnOnce("tick", "Scripts failed: " + t); }
 		menuPages(server);
+		// the tags last this one tick (seen twice, a click counted twice: the Shadow Wheel skipped every other shikigami)
+		TAGGED.addAll(tagged);
 		for (String[] t : TAGGED) {
 			ServerPlayer p = server.getPlayerList().getPlayer(UUID.fromString(t[0]));
 			if (p != null) p.removeTag(t[1]);
 		}
 		TAGGED.clear();
-		TAGGED.addAll(tagged);
 		// properties / groups that changed go to the clients
 		for (ServerLevel l : server.getAllLevels()) for (Entity en : l.getAllEntities()) {
 			Actor a = Actor.peek(en);
