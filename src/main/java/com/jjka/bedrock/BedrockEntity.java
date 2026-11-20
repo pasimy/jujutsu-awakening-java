@@ -255,6 +255,9 @@ public class BedrockEntity extends PathfinderMob {
 	@Override
 	public void tick() {
 		super.tick();
+		// the client reads the entity's own components too (scale, size): it only heard about them when the server synced
+		// a group change, so a domain sphere that never changed groups was drawn at half its size
+		if (level().isClientSide && !clientApplied) { clientApplied = true; applyComponents(); }
 		if (level() instanceof ServerLevel sl) {
 			Actor a = actor();
 			if (tickCount == 1 || !a.groupsChangedOnce) { a.groupsChanged = true; a.apply(); a.groupsChangedOnce = true; }
@@ -323,6 +326,7 @@ public class BedrockEntity extends PathfinderMob {
 
 	// ------------------------------------------------------------------ minecraft:behavior.knockback_roar / minecraft:despawn
 	private int roarAge = -1;
+	private boolean clientApplied;
 
 	/** A roar: after attack_time, everything in range (that passes the filters) is knocked away; after duration, on_roar_end */
 	private void roar(ServerLevel sl, Actor a) {

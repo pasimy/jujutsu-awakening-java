@@ -33,6 +33,7 @@ public final class Moves {
 
 	private static final Map<String, List<Move>> CACHE = new HashMap<>();
 	private static final Pattern PAREN = Pattern.compile("\\(([^()]*)\\)");
+	private static final Pattern BRACKET = Pattern.compile("\\[\\s*(.+?) to (.+?)\\s*\\]");
 	private static final Pattern KEY = Pattern.compile("(?i)click|punch|sneak|jump|look|sprint|m1");
 
 	public static synchronized List<Move> of(String itemId) {
@@ -48,6 +49,18 @@ public final class Moves {
 		for (String block : text.split("\\n\\s*\\n")) {
 			List<String> lines = new ArrayList<>();
 			for (String l : block.split("\\n")) if (!l.trim().isEmpty()) lines.add(l.trim());
+			// "[ Right-Click to Switch Shikigami ]" lines (the Shadow Wheel): one move each
+			boolean bracketed = false;
+			for (String l : lines) {
+				Matcher bm = BRACKET.matcher(l);
+				if (!bm.matches() || !KEY.matcher(bm.group(1)).find()) continue;
+				bracketed = true;
+				String c = bm.group(1).toLowerCase(Locale.ROOT), nm = bm.group(2).trim();
+				nm = Character.toUpperCase(nm.charAt(0)) + nm.substring(1);
+				out.add(new Move(nm, bm.group(1).trim(), c.contains("sneak"), false, c.contains("jump"), c.contains("look up"), c.contains("look down"),
+						c.contains("punch") || c.contains("m1") || c.contains("left"), c.contains("sprint")));
+			}
+			if (bracketed) continue;
 			if (lines.isEmpty() || lines.get(0).startsWith("-") || lines.get(0).startsWith("[")) continue;
 			String first = lines.get(0), name = first, cond = null;
 			// "(Sneak + Right Click) to Flashstep" / "Sneak + Punch to disable infinity"
@@ -74,6 +87,12 @@ public final class Moves {
 			out.add(new Move(name, cond == null ? "Right-Click" : cond.trim(), c.contains("sneak") && !dbl, dbl, c.contains("jump"),
 					c.contains("look up") || c.contains("looking up") || c.contains("straight up"),
 					c.contains("look down") || c.contains("looking down") || c.contains("straight down"), punch, c.contains("sprint")));
+		}
+		// an item whose description lists no moves (Domain Amplification, Boogie Woogie's 2nd skill ...) is used as it is:
+		// one move, right click, named after the item
+		if (out.isEmpty()) {
+			String title = text.split("\\n")[0].trim();
+			if (!title.isEmpty()) out.add(new Move(title, "Right-Click", false, false, false, false, false, false, false));
 		}
 		return out;
 	}
