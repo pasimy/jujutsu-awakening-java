@@ -272,6 +272,13 @@ public final class Screen {
 		return glyphCells.getOrDefault(page, 16.0);
 	}
 
+	/** Bedrock draws a glyph at half its cell's pixels in UI units, on a UI about 270 units tall */
+	private static double glyphSize(char ch) {
+		double cell = cell(String.format("%02x", ch >> 8));
+		int h = Minecraft.getInstance().getWindow().getGuiScaledHeight();
+		return cell / 2.0 * h / 270.0;
+	}
+
 	private static float titleAlpha(double t0, int in, int stay, int out) {
 		if (t0 < 0) return 0;
 		double t = (now() - t0) * 20;
@@ -301,7 +308,7 @@ public final class Screen {
 		float w = 0, h = 9 * scale;
 		for (Object p : parts) {
 			if (p instanceof String str) w += font.width(str) * scale;
-			else { double gs = cell(String.format("%02x", ((Character) p) >> 8)) / 2.0; w += gs; h = Math.max(h, (float) gs); }
+			else { double gs = glyphSize((Character) p); w += gs; h = Math.max(h, (float) gs); }
 		}
 		float x = cx - w / 2;
 		int a = Mth.clamp((int) (alpha * 255), 0, 255);
@@ -318,7 +325,7 @@ public final class Screen {
 				char ch = (Character) p;
 				String name = String.format("%04x", (int) ch);
 				ResourceLocation tex = new ResourceLocation(Bedrock.MODID, "textures/glyph/" + name + ".png");
-				double gs = cell(name.substring(0, 2)) / 2.0;
+				double gs = glyphSize(ch);
 				if (BedrockRenderer.exists(tex)) {
 					RenderSystem.enableBlend();
 					g.setColor(1, 1, 1, alpha);

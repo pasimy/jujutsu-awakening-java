@@ -36,7 +36,7 @@ def strip_comments(text):
 def load(path):
     with open(path, encoding='utf-8-sig') as f: return json.loads(strip_comments(f.read()))
 
-GLYPH_MAX = 1024
+GLYPH_MAX = 512
 GLYPH_CELLS = {}
 
 def glyphs(src, out):
@@ -57,6 +57,8 @@ def glyphs(src, out):
             g = im.crop(box)
             if g.getbbox() is None: continue
             if g.width > GLYPH_MAX: g = g.resize((GLYPH_MAX, GLYPH_MAX), Image.LANCZOS)
+            # most are black and white impact frames: a 256-colour palette keeps them small
+            g = g.quantize(colors=256, method=Image.Quantize.FASTOCTREE)
             g.save(os.path.join(out, '%s%02x.png' % (page, row * 16 + col)), optimize=True)
 
 def main(bp, rp, out='src/main/resources'):

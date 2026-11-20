@@ -497,16 +497,21 @@ public final class Commands {
 					Vec3 off = target.subtract(e.position());
 					if (!c.level.noCollision(e, e.getBoundingBox().move(off))) continue;
 				}
-				teleport(e, c.level, target, Mth.wrapDegrees(ny), Mth.clamp(nx, -90, 90));
+				boolean rotate = y != null || x != null || ft != null || fp != null || destYaw != null && v == null;
+				teleport(e, c.level, target, Mth.wrapDegrees(ny), Mth.clamp(nx, -90, 90), rotate);
 				n++;
 			}
 			return n;
 		};
 	}
 
-	static void teleport(Entity e, ServerLevel level, Vec3 to, float yaw, float pitch) {
+	static void teleport(Entity e, ServerLevel level, Vec3 to, float yaw, float pitch) { teleport(e, level, to, yaw, pitch, true); }
+
+	static void teleport(Entity e, ServerLevel level, Vec3 to, float yaw, float pitch, boolean rotate) {
 		if (e instanceof ServerPlayer p) {
 			if (p.level() != level) p.teleportTo(level, to.x, to.y, to.z, yaw, pitch);
+			// without a new rotation, leave the player's view alone (Java would otherwise snap it back every tick)
+			else if (!rotate) p.connection.teleport(to.x, to.y, to.z, 0, 0, java.util.EnumSet.of(net.minecraft.world.entity.RelativeMovement.X_ROT, net.minecraft.world.entity.RelativeMovement.Y_ROT));
 			else p.connection.teleport(to.x, to.y, to.z, yaw, pitch);
 			p.resetFallDistance();
 		} else if (e.level() == level) {
