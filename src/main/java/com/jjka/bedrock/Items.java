@@ -116,6 +116,11 @@ public final class Items {
 		public boolean on;
 		/** the fighting style in use (null: the newest one) */
 		public String style;
+		/** the technique item last equipped or given (Limitless, Boogie Woogie ...); the others you own wait in the J menu */
+		public String equipped;
+
+		/** whether the item belongs on the scroll bar: a technique item you've switched away from doesn't */
+		public boolean shown(String id) { return !equip(id) || equipped == null || id.equals(equipped); }
 
 		public String activeStyle() {
 			if (style != null && items.contains(style)) return style;
@@ -131,6 +136,7 @@ public final class Items {
 			t.putInt("selected", selected);
 			t.putBoolean("on", on);
 			if (style != null) t.putString("style", style);
+			if (equipped != null) t.putString("equipped", equipped);
 			return t;
 		}
 
@@ -140,6 +146,7 @@ public final class Items {
 			selected = t.getInt("selected");
 			on = t.getBoolean("on");
 			style = t.contains("style") ? t.getString("style") : null;
+			equipped = t.contains("equipped") ? t.getString("equipped") : null;
 		}
 
 		public String held() { return on && selected >= 0 && selected < items.size() ? items.get(selected) : null; }
@@ -218,6 +225,13 @@ public final class Items {
 	}
 
 	/** Fighting styles: the add-on's "fists" / "combat" items you punch with */
+	/** The Stats Manual and Cursed Energy Manipulation: used from their own keys, kept off the technique bar */
+	public static boolean tool(String id) { return id.equals("ds:stats_book") || id.equals("ds:cursedenergy"); }
+
+	/** Items that equip a whole technique (Limitless, Boogie Woogie ...), replacing the one before. Not the King of
+	 * Curses, which you hold alongside your technique */
+	public static boolean equip(String id) { return id.endsWith("_technique") && !id.equals("ds:sukuna_technique"); }
+
 	public static boolean style(String id) { return id.endsWith("fists") || id.endsWith("_combat") || id.endsWith("combat_style"); }
 
 	private static int match(ItemStack s, String id) { return !s.isEmpty() && idOf(s).equals(id) ? s.getCount() : 0; }
@@ -263,9 +277,10 @@ public final class Items {
 					Bar b = bar(p);
 					if (!b.items.contains(id) || item.getMaxStackSize() > 1) {
 						b.items.add(id);
+						if (equip(id)) b.equipped = id;
 						// a newly given technique is the one you use (Sukuna taking over hands you his moves): the first of
 						// the tick's batch, so a function giving several doesn't land on the last
-						if (!style(id) && !id.equals("ds:dash") && !Moves.of(id).isEmpty() && SELECTED_AT.getOrDefault(p.getUUID(), -1) != p.server.getTickCount()) {
+						if (!style(id) && !tool(id) && !id.equals("ds:dash") && !Moves.of(id).isEmpty() && SELECTED_AT.getOrDefault(p.getUUID(), -1) != p.server.getTickCount()) {
 							SELECTED_AT.put(p.getUUID(), p.server.getTickCount());
 							b.selected = b.items.size() - 1;
 						}

@@ -34,7 +34,7 @@ public final class Keys {
 	private static KeyMapping key(String name, int k) { return new KeyMapping("key.jjka." + name, KeyConflictContext.IN_GAME, InputConstants.Type.KEYSYM, k, CATEGORY); }
 
 	public static final KeyMapping MODE = key("mode", GLFW.GLFW_KEY_R), PREV = key("prev", GLFW.GLFW_KEY_Z), NEXT = key("next", GLFW.GLFW_KEY_X),
-			DASH = key("dash", GLFW.GLFW_KEY_C), INFO = key("info", GLFW.GLFW_KEY_J), STYLE_HUD = key("style_hud", GLFW.GLFW_KEY_H);
+			DASH = key("dash", GLFW.GLFW_KEY_C), STATS = key("stats", GLFW.GLFW_KEY_K), ENERGY = key("energy", GLFW.GLFW_KEY_V), INFO = key("info", GLFW.GLFW_KEY_J), STYLE_HUD = key("style_hud", GLFW.GLFW_KEY_H);
 	public static final KeyMapping[] MOVES = new KeyMapping[9];
 	static {
 		for (int i = 0; i < 9; i++) MOVES[i] = key("move" + (i + 1), GLFW.GLFW_KEY_1 + i);
@@ -56,7 +56,7 @@ public final class Keys {
 		List<Integer> out = new ArrayList<>();
 		for (int i = 0; i < bar.items.size(); i++) {
 			String id = bar.items.get(i);
-			if (!Items.style(id) && !id.equals("ds:dash") && !Moves.of(id).isEmpty()) out.add(i);
+			if (!Items.style(id) && !id.equals("ds:dash") && !Items.tool(id) && bar.shown(id) && !Moves.of(id).isEmpty()) out.add(i);
 		}
 		return out;
 	}
@@ -69,7 +69,8 @@ public final class Keys {
 
 	static boolean active() { return bar.on && !techniques().isEmpty(); }
 
-	static void bar(List<String> items, int selected, boolean on, String style) {
+	static void bar(List<String> items, int selected, boolean on, String style, String equipped) {
+		bar.equipped = equipped == null || equipped.isEmpty() ? null : equipped;
 		boolean changed = bar.selected != selected || bar.on != on || !bar.items.equals(items);
 		bar.items.clear();
 		bar.items.addAll(items);
@@ -93,7 +94,7 @@ public final class Keys {
 		send();
 	}
 
-	private static void send() { Net.CHANNEL.sendToServer(new Net.Bar(new ArrayList<>(), bar.selected, bar.on, bar.style == null ? "" : bar.style)); }
+	private static void send() { Net.CHANNEL.sendToServer(new Net.Bar(new ArrayList<>(), bar.selected, bar.on, bar.style == null ? "" : bar.style, "")); }
 
 	private static void step(int d) {
 		List<Integer> t = techniques();
@@ -127,6 +128,8 @@ public final class Keys {
 			choose(t.contains(bar.selected) || t.isEmpty() ? bar.selected : t.get(0), !bar.on);
 		}
 		if (hit.test(DASH)) Net.CHANNEL.sendToServer(new Net.Press("dash", 0));
+		if (hit.test(STATS)) Net.CHANNEL.sendToServer(new Net.Press("stats", 0));
+		if (hit.test(ENERGY)) Net.CHANNEL.sendToServer(new Net.Press("energy", mc.options.keyShift.isDown() ? 1 : 0));
 		if (!active()) return;
 		if (hit.test(PREV)) step(-1);
 		if (hit.test(NEXT)) step(1);

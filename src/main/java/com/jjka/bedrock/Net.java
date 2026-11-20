@@ -29,7 +29,7 @@ public final class Net {
 	/** Implemented on the client */
 	public interface ClientSide {
 		void particle(String id, double x, double y, double z);
-		void bar(List<String> items, int selected, boolean on, String style);
+		void bar(List<String> items, int selected, boolean on, String style, String equipped);
 		void title(String mode, String text);
 		void titleTimes(int in, int stay, int out);
 		void shake(boolean stop, float intensity, float seconds, boolean rotational);
@@ -72,7 +72,7 @@ public final class Net {
 		for (ServerPlayer sp : level.players()) if (sp.distanceToSqr(at) < 192 * 192) CHANNEL.send(PacketDistributor.PLAYER.with(() -> sp), p);
 	}
 
-	public static void bar(ServerPlayer p, Items.Bar b) { CHANNEL.send(PacketDistributor.PLAYER.with(() -> p), new Bar(new ArrayList<>(b.items), b.selected, b.on, b.activeStyle())); }
+	public static void bar(ServerPlayer p, Items.Bar b) { CHANNEL.send(PacketDistributor.PLAYER.with(() -> p), new Bar(new ArrayList<>(b.items), b.selected, b.on, b.activeStyle(), b.equipped == null ? "" : b.equipped)); }
 
 	public static void title(ServerPlayer p, String mode, String text) { CHANNEL.send(PacketDistributor.PLAYER.with(() -> p), new Title(mode, text, 0, 0, 0)); }
 
@@ -104,9 +104,9 @@ public final class Net {
 		void handle(Supplier<NetworkEvent.Context> c) { onClient(c.get(), () -> client.particle(id, x, y, z)); }
 	}
 
-	public record Bar(List<String> items, int selected, boolean on, String style) {
-		Bar(FriendlyByteBuf b) { this(b.readList(FriendlyByteBuf::readUtf), b.readVarInt(), b.readBoolean(), b.readUtf()); }
-		void write(FriendlyByteBuf b) { b.writeCollection(items, FriendlyByteBuf::writeUtf); b.writeVarInt(selected); b.writeBoolean(on); b.writeUtf(style == null ? "" : style); }
+	public record Bar(List<String> items, int selected, boolean on, String style, String equipped) {
+		Bar(FriendlyByteBuf b) { this(b.readList(FriendlyByteBuf::readUtf), b.readVarInt(), b.readBoolean(), b.readUtf(), b.readUtf()); }
+		void write(FriendlyByteBuf b) { b.writeCollection(items, FriendlyByteBuf::writeUtf); b.writeVarInt(selected); b.writeBoolean(on); b.writeUtf(style == null ? "" : style); b.writeUtf(equipped == null ? "" : equipped); }
 		void handle(Supplier<NetworkEvent.Context> c) {
 			NetworkEvent.Context ctx = c.get();
 			if (ctx.getDirection() == NetworkDirection.PLAY_TO_SERVER) {
@@ -114,7 +114,7 @@ public final class Net {
 				ServerPlayer p = ctx.getSender();
 				ctx.enqueueWork(() -> { if (p != null) Server.barChoice(p, selected, on, style); });
 				ctx.setPacketHandled(true);
-			} else onClient(ctx, () -> client.bar(items, selected, on, style));
+			} else onClient(ctx, () -> client.bar(items, selected, on, style, equipped));
 		}
 	}
 

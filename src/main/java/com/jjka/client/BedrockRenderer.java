@@ -256,6 +256,7 @@ public class BedrockRenderer extends EntityRenderer<BedrockEntity> {
 			if (rt == null) {
 				boolean[] em = new boolean[1];
 				rt = geo.backdrop ? Backdrop.of(tex) : material(mat, tex, em);
+				if (geo.huge) Backdrop.drawnAt = System.nanoTime();
 				if (geo.backdrop) em[0] = true;
 				types.put(key, rt);
 				glow.put(key, em[0]);
@@ -297,6 +298,11 @@ public class BedrockRenderer extends EntityRenderer<BedrockEntity> {
 		private Backdrop() { super("", null, null, 0, false, false, null, null); }
 
 		private static final Map<ResourceLocation, RenderType> CACHE = new HashMap<>();
+
+		/** when a domain's backdrop was last drawn: it doesn't write depth, so the clouds would show through it */
+		static volatile long drawnAt;
+
+		static boolean active() { return System.nanoTime() - drawnAt < 200_000_000L; }
 
 		static RenderType of(ResourceLocation tex) {
 			return CACHE.computeIfAbsent(tex, t -> create("jjka_backdrop", com.mojang.blaze3d.vertex.DefaultVertexFormat.NEW_ENTITY,

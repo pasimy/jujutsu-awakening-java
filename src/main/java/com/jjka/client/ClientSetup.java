@@ -28,6 +28,15 @@ public final class ClientSetup {
 		bus.addListener(ClientSetup::renderers);
 		bus.addListener(ClientSetup::layers);
 		bus.addListener(Keys::register);
+		// the overworld's sky effects, minus the clouds while you're inside a domain
+		bus.addListener((net.minecraftforge.client.event.RegisterDimensionSpecialEffectsEvent e) ->
+				e.register(net.minecraft.world.level.dimension.BuiltinDimensionTypes.OVERWORLD_EFFECTS, new net.minecraft.client.renderer.DimensionSpecialEffects.OverworldEffects() {
+					@Override
+					public boolean renderClouds(net.minecraft.client.multiplayer.ClientLevel level, int ticks, float partial, com.mojang.blaze3d.vertex.PoseStack ps, double x, double y, double z, org.joml.Matrix4f proj) {
+						// (cutscene cameras too: the domain intros fill the screen with effects that don't hide what's behind them)
+						return BedrockRenderer.Backdrop.active() || Screen.camOn();
+					}
+				}));
 		bus.addListener((FMLClientSetupEvent e) -> new Thread(Rp::preload, "JJKA resource pack").start());
 		var forge = MinecraftForge.EVENT_BUS;
 		forge.addListener((TickEvent.ClientTickEvent e) -> {

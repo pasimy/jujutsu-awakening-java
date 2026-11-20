@@ -99,6 +99,10 @@ public final class Server {
 		if ("ds:settings".equals(item)) JjkaCommand.menu(p);
 		USED.add(p.getUUID());
 		if (item != null) USED_ITEM.put(p.getUUID(), item);
+		if (item != null && Items.equip(item)) {
+			Items.Bar b = Items.bar(p);
+			if (!item.equals(b.equipped)) { b.equipped = item; Items.saveBar(p); }
+		}
 	}
 
 	@SubscribeEvent
@@ -162,6 +166,27 @@ public final class Server {
 		UUID id = p.getUUID();
 		if (kind.equals("dash")) {
 			if (Items.has(p, "ds:dash", null, -1)) hold(p, "ds:dash", 4, () -> use(p, "ds:dash"));
+			return;
+		}
+		if (kind.equals("stats")) {
+			if (Items.has(p, "ds:stats_book", null, -1)) hold(p, "ds:stats_book", 4, () -> use(p, "ds:stats_book"));
+			return;
+		}
+		if (kind.equals("energy")) {
+			// V uses Cursed Energy Manipulation, sneak + V switches its output
+			if (!Items.has(p, "ds:cursedenergy", null, -1)) return;
+			if (index == 1 && !p.isShiftKeyDown()) {
+				Queries.PRESS_SNEAK.put(id, 6);
+				later(p, 2, () -> hold(p, "ds:cursedenergy", 4, () -> use(p, "ds:cursedenergy")));
+			} else hold(p, "ds:cursedenergy", 4, () -> use(p, "ds:cursedenergy"));
+			return;
+		}
+		if (kind.equals("equip")) {
+			// the J menu's "switch to": use a technique item you own
+			Items.Bar b = Items.bar(p);
+			if (index < 0 || index >= b.items.size() || !Items.equip(b.items.get(index))) return;
+			String it = b.items.get(index);
+			hold(p, it, 4, () -> use(p, it));
 			return;
 		}
 		Items.Bar bar = Items.bar(p);

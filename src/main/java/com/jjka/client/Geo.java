@@ -24,6 +24,8 @@ public final class Geo {
 	public final Map<String, Bone> byName = new LinkedHashMap<>();
 	/** a huge mesh around everything (a domain's sphere): drawn as a backdrop that doesn't hide effects beyond it */
 	public boolean backdrop;
+	/** something room-sized (a domain's walls): the clouds shouldn't show through it */
+	public boolean huge;
 
 	public static final class Bone {
 		public final String name;
@@ -95,6 +97,7 @@ public final class Geo {
 		float inflate = c.has("inflate") ? c.get("inflate").getAsFloat() : boneInflate;
 		boolean mirror = c.has("mirror") ? c.get("mirror").getAsBoolean() : boneMirror;
 		float sx = f(s, 0), sy = f(s, 1), sz = f(s, 2);
+		if (Math.max(sx, Math.max(sy, sz)) > 160) g.huge = true;
 		// Java model space: y down from 24
 		float x0 = f(o, 0) - inflate, x1 = f(o, 0) + sx + inflate;
 		if (mirror) { float t = x0; x0 = x1; x1 = t; }
@@ -180,7 +183,7 @@ public final class Geo {
 				JsonArray vtx = poly.get(Math.min(i, poly.size() - 1)).getAsJsonArray();
 				JsonArray p = pos.get(vtx.get(0).getAsInt()).getAsJsonArray();
 				q[i * 5] = f(p, 0); q[i * 5 + 1] = 24 - f(p, 1); q[i * 5 + 2] = f(p, 2);
-				if (Math.abs(f(p, 0)) > 160 || Math.abs(f(p, 1)) > 160 || Math.abs(f(p, 2)) > 160) g.backdrop = true;
+				if (Math.abs(f(p, 0)) > 160 || Math.abs(f(p, 1)) > 160 || Math.abs(f(p, 2)) > 160) g.backdrop = g.huge = true;
 				if (uv != null && vtx.size() > 2) {
 					JsonArray t = uv.get(vtx.get(2).getAsInt()).getAsJsonArray();
 					float u = f(t, 0), v = f(t, 1);
