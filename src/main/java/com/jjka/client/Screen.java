@@ -332,6 +332,7 @@ public final class Screen {
 					RenderSystem.enableBlend();
 					g.setColor(1, 1, 1, alpha);
 					g.blit(tex, (int) x, (int) (y + (h - gs) / 2), 0, 0, (int) gs, (int) gs, (int) gs, (int) gs);
+					MenuScreen.hotspot(ch, (int) x, (int) (y + (h - gs) / 2), (int) gs);
 					g.setColor(1, 1, 1, 1);
 				}
 				x += gs;
@@ -357,6 +358,7 @@ public final class Screen {
 		GuiGraphics g = e.getGuiGraphics();
 		int w = mc.getWindow().getGuiScaledWidth(), h = mc.getWindow().getGuiScaledHeight();
 		Font font = mc.font;
+		MenuScreen.frame();
 		// impact frames (gg:impact_frame entities): the screen turns to negative for a moment
 		impact(g, w, h);
 		float fa = fadeAlpha();

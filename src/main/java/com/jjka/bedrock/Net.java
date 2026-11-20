@@ -42,6 +42,7 @@ public final class Net {
 		void input(String kind, boolean enabled);
 		void actor(int entity, List<String> groups, List<String[]> props, int variant, int mark, int skin);
 		void push(float x, float y, float z);
+		void menu(String page);
 	}
 
 	public static ClientSide client;
@@ -56,6 +57,7 @@ public final class Net {
 		CHANNEL.registerMessage(id++, Anim.class, Anim::write, Anim::new, Anim::handle);
 		CHANNEL.registerMessage(id++, ActorSync.class, ActorSync::write, ActorSync::new, ActorSync::handle);
 		CHANNEL.registerMessage(id++, Input.class, Input::write, Input::new, Input::handle);
+		CHANNEL.registerMessage(id++, Menu.class, Menu::write, Menu::new, Menu::handle);
 	}
 
 	private static void onClient(NetworkEvent.Context ctx, Runnable r) {
@@ -162,6 +164,23 @@ public final class Net {
 			b.writeVarInt(variant); b.writeVarInt(mark); b.writeVarInt(skin);
 		}
 		void handle(Supplier<NetworkEvent.Context> c) { onClient(c.get(), () -> client.actor(entity, groups, props, variant, mark, skin)); }
+	}
+
+	/**
+	 * The add-on's start menu. Server -> client: which page it's on ("" = closed). Client -> server: a button was hovered
+	 * (scroll = which option) or clicked / a key pressed (press = "select" or "next").
+	 */
+	public record Menu(String page, int scroll, String press) {
+		Menu(FriendlyByteBuf b) { this(b.readUtf(), b.readVarInt(), b.readUtf()); }
+		void write(FriendlyByteBuf b) { b.writeUtf(page); b.writeVarInt(scroll); b.writeUtf(press); }
+		void handle(Supplier<NetworkEvent.Context> c) {
+			NetworkEvent.Context ctx = c.get();
+			if (ctx.getDirection() == NetworkDirection.PLAY_TO_SERVER) {
+				ServerPlayer p = ctx.getSender();
+				ctx.enqueueWork(() -> { if (p != null) Server.menu(p, scroll, press); });
+				ctx.setPacketHandled(true);
+			} else onClient(ctx, () -> client.menu(page));
+		}
 	}
 
 	/** client -> server: keys Java's server can't see (jump held), and "use the selected technique" */

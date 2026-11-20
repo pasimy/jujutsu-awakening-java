@@ -47,6 +47,8 @@ final class ClientImpl implements Net.ClientSide {
 		if (e != null) Actor.of(e).sync(groups, props, variant, mark, skin);
 	}
 
+	@Override public void menu(String page) { MenuScreen.page(page); }
+
 	@Override
 	public void push(float x, float y, float z) {
 		var p = Minecraft.getInstance().player;

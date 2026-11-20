@@ -78,6 +78,7 @@ public final class Server {
 		}
 		Functions.tick(server);
 		Scripts.tick(server);
+		menuPages(server);
 		for (String[] t : TAGGED) {
 			ServerPlayer p = server.getPlayerList().getPlayer(UUID.fromString(t[0]));
 			if (p != null) p.removeTag(t[1]);
@@ -123,6 +124,34 @@ public final class Server {
 			String held = Items.bar(p).held();
 			if (held != null) use(p, held);
 		}
+	}
+
+	// ------------------------------------------------------------------ the start menu, clickable
+	private static final String[] PAGES = { "menufinal", "menutechnique", "menutraits", "menuclans", "menurace", "menuhelp", "menucredits", "menuhome", "menuintro", "startscreen" };
+	private static final Map<UUID, String> PAGE = new HashMap<>();
+
+	private static void menuPages(MinecraftServer server) {
+		for (ServerPlayer p : server.getPlayerList().getPlayers()) {
+			String page = "";
+			if (p.getTags().contains("menu")) {
+				page = "menu";
+				for (String t : PAGES) if (p.getTags().contains(t)) { page = t; break; }
+			}
+			if (!page.equals(PAGE.get(p.getUUID()))) {
+				PAGE.put(p.getUUID(), page);
+				String pg = page;
+				Net.CHANNEL.send(net.minecraftforge.network.PacketDistributor.PLAYER.with(() -> p), new Net.Menu(pg, 0, ""));
+			}
+		}
+		PAGE.keySet().removeIf(id -> server.getPlayerList().getPlayer(id) == null);
+	}
+
+	static void menu(ServerPlayer p, int scroll, String press) {
+		if (!p.getTags().contains("menu")) return;
+		Scores s = Scores.get(p.getServer());
+		if (scroll > 0 && s.getOr(p, "menuscroll", 0) != scroll) s.set(p, "menuscroll", scroll);
+		if (press.equals("select")) Queries.PRESS_JUMP.put(p.getUUID(), 3);
+		if (press.equals("next")) Queries.PRESS_SNEAK.put(p.getUUID(), 3);
 	}
 
 	static void frozen(ServerPlayer p, boolean frozen) { if (frozen) FROZEN.add(p.getUUID()); else FROZEN.remove(p.getUUID()); }

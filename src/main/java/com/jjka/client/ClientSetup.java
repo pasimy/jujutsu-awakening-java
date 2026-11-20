@@ -32,6 +32,7 @@ public final class ClientSetup {
 		var forge = MinecraftForge.EVENT_BUS;
 		forge.addListener((TickEvent.ClientTickEvent e) -> {
 			if (e.phase == TickEvent.Phase.START) { Keys.tick(); Screen.tick(); }
+			else MenuScreen.update();
 		});
 		forge.addListener((TickEvent.RenderTickEvent e) -> { if (e.phase == TickEvent.Phase.START) Screen.frame(); });
 		forge.addListener(Keys::interact);
@@ -43,7 +44,7 @@ public final class ClientSetup {
 		forge.addListener((RenderLevelStageEvent e) -> {
 			if (e.getStage() == RenderLevelStageEvent.Stage.AFTER_PARTICLES) Particles.render(e.getPoseStack(), e.getCamera());
 		});
-		forge.addListener((ClientPlayerNetworkEvent.LoggingOut e) -> { Particles.clear(); Screen.clearCam(); });
+		forge.addListener((ClientPlayerNetworkEvent.LoggingOut e) -> { Particles.clear(); Screen.clearCam(); MenuScreen.page(""); });
 	}
 
 	private static void renderers(EntityRenderersEvent.RegisterRenderers e) {
