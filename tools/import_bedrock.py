@@ -37,6 +37,7 @@ def load(path):
     with open(path, encoding='utf-8-sig') as f: return json.loads(strip_comments(f.read()))
 
 GLYPH_MAX = 1024
+GLYPH_CELLS = {}
 
 def glyphs(src, out):
     """font/glyph_XX.png is a 16x16 sheet of characters U+XX00..U+XXFF that titles use to draw pictures (impact frames,
@@ -48,6 +49,7 @@ def glyphs(src, out):
     page = m.group(1).lower()
     im = Image.open(src).convert('RGBA')
     cell = im.width / 16.0
+    GLYPH_CELLS[page] = cell
     os.makedirs(out, exist_ok=True)
     for row in range(16):
         for col in range(16):
@@ -87,6 +89,8 @@ def main(bp, rp, out='src/main/resources'):
                 dst = os.path.join(res_rp, rel)
                 files.append('rp/' + rel)
             os.makedirs(os.path.dirname(dst), exist_ok=True); shutil.copy2(src, dst)
+    os.makedirs(os.path.join(assets, 'textures/glyph'), exist_ok=True)
+    with open(os.path.join(assets, 'textures/glyph/sizes.json'), 'w') as f: json.dump(GLYPH_CELLS, f)
     # an index of every BP/RP file, so the runtime can list folders inside the jar
     with open(os.path.join(out, 'bedrock/index.txt'), 'w') as f: f.write('\n'.join(sorted(files)) + '\n')
 
@@ -113,5 +117,54 @@ def main(bp, rp, out='src/main/resources'):
     with open(os.path.join(assets, 'sounds.json'), 'w') as f: json.dump(java, f, indent=1)
     print(len(files), 'pack files,', len(seen), 'textures/sounds,', len(java), 'sound events')
 
+
+
+def items(bp, rp, out='src/main/resources'):
+    """An item model and a name for every behaviour-pack item (registered as jjka:<namespace>__<name>)"""
+    assets = os.path.join(out, 'assets/jjka')
+    tex = load(os.path.join(rp, 'textures/item_texture.json'))['texture_data']
+    models = os.path.join(assets, 'models/item'); shutil.rmtree(models, ignore_errors=True); os.makedirs(models)
+    lang = {}
+    n = 0
+    for root, _, names in os.walk(os.path.join(bp, 'items')):
+        for f in names:
+            if not f.endswith('.json'): continue
+            try: d = load(os.path.join(root, f))['minecraft:item']
+            except Exception as e: print('item', f, e); continue
+            ident = d['description']['identifier']; c = d.get('components', {})
+            path = safe(ident.replace(':', '__'))
+            icon = c.get('minecraft:icon', {})
+            key = icon.get('texture') if isinstance(icon, dict) else icon
+            if isinstance(icon, dict) and 'textures' in icon: key = icon['textures'].get('default')
+            if isinstance(icon, str): key = icon
+            layer = None
+            if key and key in tex:
+                t = tex[key]['textures']
+                t = t[0] if isinstance(t, list) else t
+                if isinstance(t, dict): t = t.get('path')
+                t = safe(t)
+                layer = 'jjka:' + (t[len('textures/'):] if t.startswith('textures/') else t)
+            model = {'parent': 'minecraft:item/handheld' if c.get('minecraft:hand_equipped') else 'minecraft:item/generated'}
+            if layer: model['textures'] = {'layer0': layer}
+            with open(os.path.join(models, path + '.json'), 'w') as fh: json.dump(model, fh)
+            name = c.get('minecraft:display_name', {}).get('value') if isinstance(c.get('minecraft:display_name'), dict) else None
+            lang['item.jjka.' + path] = (name or ident).split('\n')[0]
+            n += 1
+    lang.update({
+        'key.categories.jjka': 'Jujutsu Awakening',
+        'key.jjka.mode': 'Technique mode (techniques on 1-9 / scroll)',
+        'key.jjka.prev': 'Previous technique',
+        'key.jjka.next': 'Next technique',
+        'key.jjka.use': 'Use technique (without right click)',
+    })
+    os.makedirs(os.path.join(assets, 'lang'), exist_ok=True)
+    with open(os.path.join(assets, 'lang/en_us.json'), 'w', encoding='utf-8') as fh: json.dump(lang, fh, ensure_ascii=False, indent=1)
+    # Java only puts textures from some folders into the item/block atlas; add the add-on's
+    atl = os.path.join(out, 'assets/minecraft/atlases'); os.makedirs(atl, exist_ok=True)
+    srcs = [{'type': 'directory', 'source': d, 'prefix': d + '/'} for d in ('items', 'blocks')]
+    with open(os.path.join(atl, 'blocks.json'), 'w') as fh: json.dump({'sources': srcs}, fh)
+    print(n, 'items')
+
 if __name__ == '__main__':
-    main(sys.argv[1], sys.argv[2])
+    if len(sys.argv) < 4 or sys.argv[3] != 'items': main(sys.argv[1], sys.argv[2])
+    items(sys.argv[1], sys.argv[2])

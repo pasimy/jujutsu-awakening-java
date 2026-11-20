@@ -1,0 +1,45 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "ds:domain_barrier_inside",
+      "materials": {
+        "default": "entity_emissive_alpha"
+      },
+      "textures": {
+        "default": "textures/entity/domain_barrier"
+      },
+      "geometry": {
+        "default": "geometry.domain_barrier_inside"
+      },
+      "scripts": {
+        "should_update_bones_and_effects_offscreen": true,
+        "animate": [
+          "temp"
+        ]
+      },
+      "animations": {
+        "temp": "controller.animation.temp"
+      },
+      "particle_effects": {
+        "kashimo_domain_background1": "ds:kashimo_domain_background1",
+        "kashimo_domain_background2": "ds:kashimo_domain_background2",
+        "kashimo_domain_background3": "ds:kashimo_domain_background3",
+        "kashimo_domain2": "ds:kashimo_domain2",
+        "kashimo_domain_floor": "ds:kashimo_domain_floor",
+        "unlimited_void1": "ds:unlimited_void1",
+        "unlimited_void2": "ds:unlimited_void2",
+        "unlimited_void3": "ds:unlimited_void3",
+        "unlimited_void4": "ds:unlimited_void4",
+        "unlimited_void5": "ds:unlimited_void5",
+        "unlimited_void7": "ds:unlimited_void7",
+        "unlimited_void8": "ds:unlimited_void8",
+        "unlimited_void9": "ds:unlimited_void9"
+      },
+      "render_controllers": [
+        "controller.render.default"
+      ],
+      "enable_attachables": true
+    }
+  }
+}

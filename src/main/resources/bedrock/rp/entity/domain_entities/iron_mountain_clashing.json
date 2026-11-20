@@ -1,0 +1,50 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "ds:iron_mountain_clashing",
+      "spawn_egg": {
+        "overlay_color": "#a29920",
+        "base_color": "#a28949"
+      },
+      "materials": {
+        "default": "entity_emissive_alpha"
+      },
+      "textures": {
+        "default": "textures/models/iron_mountain"
+      },
+      "geometry": {
+        "default": "geometry.iron_mountain_clashing"
+			},
+			"scripts": {
+			"should_update_bones_and_effects_offscreen": true,
+			"animate": [
+			"root"
+			   ]
+			      },
+      "animations": {
+        "root": "animation.iron_mountain_clashing"
+      },
+      "particle_effects": {
+        "iron_mountain1": "ds:iron_mountain1",
+        "iron_mountain2": "ds:iron_mountain2",
+        "iron_mountain3": "ds:iron_mountain3",
+        "iron_mountain4": "ds:iron_mountain4",
+        "iron_mountain5": "ds:iron_mountain5",
+        "iron_mountain_clash1": "ds:iron_mountain_clash1",
+        "iron_mountain_clash2": "ds:iron_mountain_clash2",
+        "iron_mountain_clash3": "ds:iron_mountain_clash3",
+        "iron_mountain_clash4": "ds:iron_mountain_clash4",
+        "iron_mountain_clash5": "ds:iron_mountain_clash5",
+        "domain_geyser1": "ds:domain_geyser1",
+        "domain_geyser2": "ds:domain_geyser2",
+        "domain_geyser3": "ds:domain_geyser3",
+        "domain_geyser4": "ds:domain_geyser4",
+        "domain_geyser5": "ds:domain_geyser5"
+      },
+      "render_controllers": [
+        "controller.render.default"
+      ]
+    }
+  }
+}

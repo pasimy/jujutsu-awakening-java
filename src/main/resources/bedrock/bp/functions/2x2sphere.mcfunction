@@ -1,0 +1,1 @@
+execute as @p unless block ~~-1~ bedrock unless block ~~~ bedrock unless block ~~1~ bedrock unless block ~~-1~ barrier unless block ~~~ barrier unless block ~~1~ barrier run structure load 2x2sphere ~-1~-1~-1

@@ -1,0 +1,33 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "ds:domain_clash_main",
+      "materials": {
+        "default": "entity_emissive_alpha"
+      },
+      "textures": {
+        "default": "textures/entity/domain_barrier"
+      },
+      "geometry": {
+        "default": "geometry.domain_barrier_inside"
+      },
+      "scripts": {
+        "should_update_bones_and_effects_offscreen": true,
+        "animate": [
+          "temp"
+        ]
+      },
+      "animations": {
+        "temp": "animation.domainclash_main"
+      },
+      "particle_effects": {
+        "domain_clash_floor1": "ds:domain_clash_floor1"
+      },
+      "render_controllers": [
+        "controller.render.default"
+      ],
+      "enable_attachables": true
+    }
+  }
+}

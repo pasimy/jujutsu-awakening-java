@@ -1,0 +1,53 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "ds:perfection_clashing",
+      "spawn_egg": {
+        "overlay_color": "#a29920",
+        "base_color": "#a28949"
+      },
+      "materials": {
+        "default": "entity_emissive_alpha"
+      },
+      "textures": {
+        "default": "textures/entity/perfection_domain"
+      },
+      "geometry": {
+        "default": "geometry.perfection_domain2"
+			},
+			"scripts": {
+			"should_update_bones_and_effects_offscreen": true,
+			"animate": [
+			"root"
+			   ]
+			      },
+      "animations": {
+        "root": "animation.perfection_clashing"
+      },
+      "particle_effects": {
+        "perfection_clashing1": "ds:perfection_clash1",
+        "perfection_clashing2": "ds:perfection_clash2",
+        "perfection_clashing3": "ds:perfection_clash3",
+        "perfection_clashing4": "ds:perfection_clash4",
+        "perfection_clashing5": "ds:perfection_clash5",
+        "perfection_clashing6": "ds:perfection_clash6",
+        "perfection_domain1": "ds:perfection_domain1",
+        "perfection_domain3": "ds:perfection_domain3",
+        "perfection_domain4": "ds:perfection_domain4",
+        "perfection_domain5": "ds:perfection_domain5",
+        "perfection_domain6": "ds:perfection_domain6",
+        "perfection_domain7": "ds:perfection_domain7",
+        "perfection_domain8": "ds:perfection_domain8",
+        "perfection_domain9": "ds:perfection_domain9",
+        "perfection_domain10": "ds:perfection_domain10",
+        "perfection_domain11": "ds:perfection_domain11",
+        "perfection_domain12": "ds:perfection_domain12",
+        "perfection_domain13": "ds:perfection_domain13"
+      },
+      "render_controllers": [
+        "controller.render.default"
+      ]
+    }
+  }
+}

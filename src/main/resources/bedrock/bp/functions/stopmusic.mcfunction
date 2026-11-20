@@ -1,0 +1,9 @@
+stopsound @s music.tempmusic
+stopsound @s music.prowess
+stopsound @s music.tukadonka
+stopsound @s music.malevolent_kitchen
+stopsound @s music.toji
+stopsound @s music.gojoblackflash
+stopsound @s music.mahoraga
+stopsound @s music.first_blackflash
+stopsound @s music.skyfall

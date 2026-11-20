@@ -1,0 +1,7 @@
+{
+  "format_version": "1.16.100",
+  "minecraft:texture_set": {
+    "color": "circle_p_outline1",
+    "metalness_emissive_roughness": "circle_p_outline1_mer"
+  }
+}

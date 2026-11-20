@@ -1,0 +1,39 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "ds:deadly_sentencing_clashing",
+      "spawn_egg": {
+        "overlay_color": "#a29920",
+        "base_color": "#a28949"
+      },
+      "materials": {
+        "default": "entity_emissive_alpha"
+      },
+      "textures": {
+        "default": "textures/models/deadly_sentencing"
+      },
+      "geometry": {
+        "default": "geometry.deadly_sentencing_clashing"
+			},
+			"scripts": {
+			"should_update_bones_and_effects_offscreen": true,
+			"animate": [
+			"root"
+			   ]
+			      },
+      "animations": {
+        "root": "animation.deadly_sentencing_clashing"
+      },
+      "particle_effects": {
+        "deadly_sentencing1": "ds:deadly_sentencing1",
+        "deadly_sentencing2": "ds:deadly_sentencing2",
+        "deadly_sentencing_clash1": "ds:deadly_sentencing_clash1",
+        "deadly_sentencing_clash3": "ds:deadly_sentencing_clash3"
+      },
+      "render_controllers": [
+        "controller.render.default"
+      ]
+    }
+  }
+}

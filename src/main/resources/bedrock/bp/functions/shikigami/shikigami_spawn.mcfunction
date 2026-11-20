@@ -1,0 +1,15 @@
+effect @s[type=ds:shadowwolf] speed infinite 1 true
+effect @s[type=ds:white_wolf] speed infinite 1 true
+effect @s[type=ds:black_wolf] speed infinite 1 true
+scoreboard players set @s[type=ds:shadowwolf] Deleter 300
+scoreboard players set @s[type=ds:white_wolf] Deleter 2400
+scoreboard players set @s[type=ds:black_wolf] Deleter 2400
+scoreboard players random @s[type=ds:shadowrabbit] Deleter 200 300
+scoreboard players set @s[type=ds:rabbitescape] Deleter 2400
+scoreboard players set @s[type=ds:toad] Deleter 1200
+scoreboard players set @s[type=ds:shadowserpent] Deleter 300
+scoreboard players set @s[type=ds:serpent] Deleter 2400
+scoreboard players set @s[type=ds:maxelephant] Deleter 5600
+scoreboard players set @s[type=ds:rounddeer] Deleter 600
+scoreboard players set @s[type=ds:agito] Deleter 6000
+scoreboard players set @s[type=ds:mahoragatamed] Deleter 23000

@@ -1,0 +1,5 @@
+
+execute as @p unless entity @e[tag=BackhandTRG,r=6.99,c=1] run tag @e[tag=!Frames,r=6.99,c=1,type=!item,family=!projectile,family=!despawncito,family=!damage,family=!motionless,family=!disappear,type=!xp_orb,type=!arrow,type=!thrown_trident,type=!fireball,type=!dragon_fireball,type=!small_fireball,type=!fireworks_rocket,type=!fishing_hook,type=!xp_bottle,type=!ender_pearl,type=!lightning_bolt,type=!splash_potion,type=!lingering_potion,type=!area_effect_cloud,type=!snowball,type=!egg,type=!falling_block,tag=!unselect,type=!ds:lapse_explode,type=!ds:red_reversal,type=!ds:hollow_nuke,type=!ds:limitless_explosion,type=!ds:pressure,type=!ds:energy_explosion,type=!ds:massive_bomb,type=!ds:shrine_dmg,type=!ds:pachinko_impact1,type=!ds:bolt_explode,type=!ds:shikigami_impact,type=!ds:oxrushex,type=!gg:impact_frame,type=!armor_stand,family=!flyhead] add BackhandTRG
+execute as @p if entity @e[scores={move=23},tag=limitless,r=80,c=1] unless entity @e[tag=BackhandTRG,r=6.99,c=1] positioned ^^^7 run function limitless/flashstep
+
+

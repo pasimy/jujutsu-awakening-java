@@ -1,0 +1,41 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "ds:idle_clashing",
+      "spawn_egg": {
+        "overlay_color": "#a29920",
+        "base_color": "#a28949"
+      },
+      "materials": {
+        "default": "entity_emissive_alpha"
+      },
+      "textures": {
+        "default": "textures/entity/lovetrain/deathgamble"
+      },
+      "geometry": {
+        "default": "geometry.deathgamble"
+			},
+			"scripts": {
+			"should_update_bones_and_effects_offscreen": true,
+			"animate": [
+			"root"
+			   ]
+			      },
+      "animations": {
+        "root": "animation.idle_clashing"
+      },
+      "particle_effects": {
+        "idle_clash1": "ds:idle_clash1",
+        "idle_clash2": "ds:idle_clash2",
+        "gamble_start1": "ds:gamble_start1",
+        "gamble_start2": "ds:gamble_start2",
+        "gamble_start3": "ds:gamble_start3",
+        "gamble_start4": "ds:gamble_start4"
+      },
+      "render_controllers": [
+        "controller.render.default"
+      ]
+    }
+  }
+}

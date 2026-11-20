@@ -1,0 +1,42 @@
+tag @s[tag=!fistenergy] add fistenergy
+
+scoreboard players add @s divergentfistCD 1
+scoreboard players remove @s[scores={atk=1..,Energy=4..}] Energy 4
+scoreboard players set @s[scores={Energy=0..3,divergent=4..}] divergent 3
+
+execute as @s[scores={atk=1..},family=!purecurse,tag=!curse,tag=!roughce] unless entity @s[tag=has_sukuna,tag=sukuna,type=!player] unless entity @s[tag=sukuna,type=player] at @s positioned ^^^3 if entity @e[tag=!Frames,r=2.95,type=!item,family=!projectile,family=!despawncito,family=!damage,family=!motionless,family=!disappear,type=!xp_orb,type=!arrow,type=!thrown_trident,type=!fireball,type=!dragon_fireball,type=!small_fireball,type=!fireworks_rocket,type=!fishing_hook,type=!xp_bottle,type=!ender_pearl,type=!lightning_bolt,type=!splash_potion,type=!lingering_potion,type=!area_effect_cloud,type=!snowball,type=!egg,type=!falling_block,tag=!unselect,type=!ds:lapse_explode,type=!ds:red_reversal,type=!ds:hollow_nuke,type=!ds:limitless_explosion,type=!ds:pressure,type=!ds:energy_explosion,type=!ds:massive_bomb,type=!ds:shrine_dmg,type=!ds:pachinko_impact1,type=!ds:bolt_explode,type=!ds:shikigami_impact,type=!ds:oxrushex,type=!ds:gojo_knockback,type=!gg:impact_frame] at @s positioned ^^1^1.25 run function ce/divergent_hit
+execute as @s[scores={atk=1..},tag=!roughce] unless entity @s[family=!purecurse,tag=!curse] unless entity @s[tag=has_sukuna,tag=sukuna,type=!player] unless entity @s[tag=sukuna,type=player] at @s positioned ^^^3 if entity @e[tag=!Frames,r=2.95,type=!item,family=!projectile,family=!despawncito,family=!damage,family=!motionless,family=!disappear,type=!xp_orb,type=!arrow,type=!thrown_trident,type=!fireball,type=!dragon_fireball,type=!small_fireball,type=!fireworks_rocket,type=!fishing_hook,type=!xp_bottle,type=!ender_pearl,type=!lightning_bolt,type=!splash_potion,type=!lingering_potion,type=!area_effect_cloud,type=!snowball,type=!egg,type=!falling_block,tag=!unselect,type=!ds:lapse_explode,type=!ds:red_reversal,type=!ds:hollow_nuke,type=!ds:limitless_explosion,type=!ds:pressure,type=!ds:energy_explosion,type=!ds:massive_bomb,type=!ds:shrine_dmg,type=!ds:pachinko_impact1,type=!ds:bolt_explode,type=!ds:shikigami_impact,type=!ds:oxrushex,type=!ds:gojo_knockback,type=!gg:impact_frame] at @s positioned ^^1^1.25 run function ce/divergent_hit_purple
+execute as @s[scores={atk=1..},tag=roughce] unless entity @s[tag=has_sukuna,tag=sukuna,type=!player] unless entity @s[tag=sukuna,type=player] at @s positioned ^^^3 if entity @e[tag=!Frames,r=2.95,type=!item,family=!projectile,family=!despawncito,family=!damage,family=!motionless,family=!disappear,type=!xp_orb,type=!arrow,type=!thrown_trident,type=!fireball,type=!dragon_fireball,type=!small_fireball,type=!fireworks_rocket,type=!fishing_hook,type=!xp_bottle,type=!ender_pearl,type=!lightning_bolt,type=!splash_potion,type=!lingering_potion,type=!area_effect_cloud,type=!snowball,type=!egg,type=!falling_block,tag=!unselect,type=!ds:lapse_explode,type=!ds:red_reversal,type=!ds:hollow_nuke,type=!ds:limitless_explosion,type=!ds:pressure,type=!ds:energy_explosion,type=!ds:massive_bomb,type=!ds:shrine_dmg,type=!ds:pachinko_impact1,type=!ds:bolt_explode,type=!ds:shikigami_impact,type=!ds:oxrushex,type=!ds:gojo_knockback,type=!gg:impact_frame] at @s positioned ^^1^1.25 run function ce/divergent_hit_green
+execute as @s[scores={atk=1..},tag=has_sukuna,tag=sukuna,type=!player] at @s positioned ^^^3 if entity @e[tag=!Frames,r=2.95,type=!item,family=!projectile,family=!despawncito,family=!damage,family=!motionless,family=!disappear,type=!xp_orb,type=!arrow,type=!thrown_trident,type=!fireball,type=!dragon_fireball,type=!small_fireball,type=!fireworks_rocket,type=!fishing_hook,type=!xp_bottle,type=!ender_pearl,type=!lightning_bolt,type=!splash_potion,type=!lingering_potion,type=!area_effect_cloud,type=!snowball,type=!egg,type=!falling_block,tag=!unselect,type=!ds:lapse_explode,type=!ds:red_reversal,type=!ds:hollow_nuke,type=!ds:limitless_explosion,type=!ds:pressure,type=!ds:energy_explosion,type=!ds:massive_bomb,type=!ds:shrine_dmg,type=!ds:pachinko_impact1,type=!ds:bolt_explode,type=!ds:shikigami_impact,type=!ds:oxrushex,type=!ds:gojo_knockback,type=!gg:impact_frame] at @s positioned ^^1^1.25 run function ce/divergent_hit_red
+execute as @s[scores={atk=1..},tag=sukuna,type=player] at @s positioned ^^^3 if entity @e[tag=!Frames,r=2.95,type=!item,family=!projectile,family=!despawncito,family=!damage,family=!motionless,family=!disappear,type=!xp_orb,type=!arrow,type=!thrown_trident,type=!fireball,type=!dragon_fireball,type=!small_fireball,type=!fireworks_rocket,type=!fishing_hook,type=!xp_bottle,type=!ender_pearl,type=!lightning_bolt,type=!splash_potion,type=!lingering_potion,type=!area_effect_cloud,type=!snowball,type=!egg,type=!falling_block,tag=!unselect,type=!ds:lapse_explode,type=!ds:red_reversal,type=!ds:hollow_nuke,type=!ds:limitless_explosion,type=!ds:pressure,type=!ds:energy_explosion,type=!ds:massive_bomb,type=!ds:shrine_dmg,type=!ds:pachinko_impact1,type=!ds:bolt_explode,type=!ds:shikigami_impact,type=!ds:oxrushex,type=!ds:gojo_knockback,type=!gg:impact_frame] at @s positioned ^^1^1.25 run function ce/divergent_hit_red
+
+
+
+execute as @s[tag=itemUse:ds:cursedenergy,scores={scroll=2,move=0,ab=0}] at @s run playsound beacon.deactivate @a ~~~ 1 3
+scoreboard players set @s[tag=itemUse:ds:cursedenergy,scores={scroll=2,move=0,ab=0}] Stun 5
+scoreboard players set @s[tag=itemUse:ds:cursedenergy,scores={scroll=2,move=0,ab=0,divergent=4..}] divergent 3
+
+
+execute as @s[scores={divergent=0..1}] at @s run playsound random.fizz @a ~~~
+execute as @s[scores={divergent=0..1},family=!purecurse,tag=!curse,tag=!roughce] unless entity @s[tag=has_sukuna,tag=sukuna,type=!player] unless entity @s[tag=sukuna,type=player] at @s run particle ds:divergent_ac5
+execute as @s[scores={divergent=0..1},family=!purecurse,tag=!curse,tag=!roughce] unless entity @s[tag=has_sukuna,tag=sukuna,type=!player] unless entity @s[tag=sukuna,type=player] at @s run particle ds:divergent_ac6
+execute as @s[scores={divergent=0..1}] unless entity @s[family=!purecurse,tag=!curse] unless entity @s[tag=has_sukuna,tag=sukuna,type=!player] unless entity @s[tag=sukuna,type=player] at @s run particle ds:divergent_purpleac5
+execute as @s[scores={divergent=0..1}] unless entity @s[family=!purecurse,tag=!curse] unless entity @s[tag=has_sukuna,tag=sukuna,type=!player] unless entity @s[tag=sukuna,type=player] at @s run particle ds:divergent_purplac6
+execute as @s[scores={divergent=0..1},tag=roughce] unless entity @s[tag=has_sukuna,tag=sukuna,type=!player] unless entity @s[tag=sukuna,type=player] at @s run particle ds:divergent_greenac5
+execute as @s[scores={divergent=0..1},tag=roughce] unless entity @s[tag=has_sukuna,tag=sukuna,type=!player] unless entity @s[tag=sukuna,type=player] at @s run particle ds:divergent_greenac6
+execute as @s[scores={divergent=0..1},tag=has_sukuna,tag=sukuna,type=!player] at @s run particle ds:divergent_redac5
+execute as @s[scores={divergent=0..1},tag=has_sukuna,tag=sukuna,type=!player] at @s run particle ds:divergent_redac6
+execute as @s[scores={divergent=0..1},tag=sukuna,type=player] at @s run particle ds:divergent_redac5
+execute as @s[scores={divergent=0..1},tag=sukuna,type=player] at @s run particle ds:divergent_redac6
+
+execute unless entity @s[scores={nocts=6..},tag=!spectator,tag=confiscation,tag=!havingcts,type=!player] run scoreboard players operation @s[scores={divergent=0..2}] damageadd = @s damageinsurance
+execute unless entity @s[scores={nocts=6..},tag=!spectator,tag=confiscation,tag=!havingcts,type=!player] run scoreboard players set @s[scores={divergent=0..1,damageinsurance=1..}] damageinsurance 0
+scoreboard players set @s[scores={divergent=0..2,divfist=1..}] divfist 0
+clear @s[scores={divergent=0..2},hasitem={item=ds:divergentfists}] ds:divergentfists
+clear @s[scores={divergent=0..2},hasitem={item=ds:divergentfists_green}] ds:divergentfists_green
+clear @s[scores={divergent=0..2},hasitem={item=ds:divergentfists_purple}] ds:divergentfists_purple
+clear @s[scores={divergent=0..2},hasitem={item=ds:divergentfists_red}] ds:divergentfists_red
+replaceitem entity @s[scores={divergent=0..2},type=!player] slot.weapon.offhand 1 air
+
+
+scoreboard players remove @s[scores={divergent=1..}] divergent 1

@@ -1,0 +1,16 @@
+execute if entity @e[scores={move=4..5},tag=swapper,r=1,c=1] unless entity @s[scores={Camera=1..},tag=Frames] unless entity @s[scores={cutscene=1..},tag=Frames] unless entity @s[scores={Frames=11..},tag=Frames] unless entity @s[scores={infinity=1..},tag=!limitless] run tag @s[tag=!jjk_jumpbrother] add jjk_jumpbrother
+execute if entity @e[scores={move=4..5},tag=swapper,r=1,c=1] unless entity @s[scores={cutscene=1..},tag=Frames] unless entity @s[scores={Frames=11..},tag=Frames] unless entity @s[scores={infinity=1..},tag=!limitless] at @s[scores={Camera=1..,move=1..},tag=Frames] unless entity @e[scores={Camera=5..,Stun=5..},r=15,tag=!unselect] run tag @s[tag=!jjk_jumpbrother] add jjk_jumpbrother
+
+execute if entity @e[scores={move=20},tag=swapper,r=1,c=1] unless entity @s[scores={Camera=1..},tag=Frames] unless entity @s[scores={cutscene=1..},tag=Frames] unless entity @s[scores={Frames=11..},tag=Frames] unless entity @s[scores={infinity=1..},tag=!limitless] run tag @s[tag=!styleswap_brother] add styleswap_brother
+execute if entity @e[scores={move=20},tag=swapper,r=1,c=1] unless entity @s[scores={cutscene=1..},tag=Frames] unless entity @s[scores={Frames=11..},tag=Frames] unless entity @s[scores={infinity=1..},tag=!limitless] at @s[scores={Camera=1..,move=1..},tag=Frames] unless entity @e[scores={Camera=5..,Stun=5..},r=15,tag=!unselect] run tag @s[tag=!styleswap_brother] add styleswap_brother
+
+execute if entity @e[scores={move=6},tag=swapper,r=1,c=1] unless entity @s[scores={Camera=1..},tag=Frames] unless entity @s[scores={cutscene=1..},tag=Frames] unless entity @s[scores={Frames=11..},tag=Frames] unless entity @s[scores={infinity=1..},tag=!limitless] run tag @s[tag=!exception_brother] add exception_brother
+execute if entity @e[scores={move=6},tag=swapper,r=1,c=1] unless entity @s[scores={cutscene=1..},tag=Frames] unless entity @s[scores={Frames=11..},tag=Frames] unless entity @s[scores={infinity=1..},tag=!limitless] at @s[scores={Camera=1..,move=1..},tag=Frames] unless entity @e[scores={Camera=5..,Stun=5..},r=15,tag=!unselect] run tag @s[tag=!exception_brother] add exception_brother
+
+execute if entity @e[scores={move=36..40},tag=swapper,r=1,c=1] unless entity @s[scores={Camera=1..},tag=Frames] unless entity @s[scores={cutscene=1..},tag=Frames] unless entity @s[scores={Frames=11..},tag=Frames] unless entity @s[scores={infinity=1..},tag=!limitless] run tag @s[tag=!plusultra_brother] add plusultra_brother
+execute if entity @e[scores={move=36..40},tag=swapper,r=1,c=1] unless entity @s[scores={cutscene=1..},tag=Frames] unless entity @s[scores={Frames=11..},tag=Frames] unless entity @s[scores={infinity=1..},tag=!limitless] at @s[scores={Camera=1..,move=1..},tag=Frames] unless entity @e[scores={Camera=5..,Stun=5..},r=15,tag=!unselect] run tag @s[tag=!plusultra_brother] add plusultra_brother
+
+execute if entity @s[tag=jjk_jumpbrother] run tag @e[scores={move=4..5},tag=swapper,r=1,c=1] add jjk_jump_tag
+execute if entity @s[tag=styleswap_brother] run tag @e[scores={move=20},tag=swapper,r=1,c=1] add styleswap_tag
+execute if entity @s[tag=exception_brother] run tag @e[scores={move=6},tag=swapper,r=1,c=1] add exception_tag
+execute if entity @s[tag=plusultra_brother] run tag @e[scores={move=36..40},tag=swapper,r=1,c=1] add plusultra_tag

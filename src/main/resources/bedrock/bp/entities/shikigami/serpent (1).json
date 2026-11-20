@@ -1,0 +1,452 @@
+{
+  "format_version": "1.13.0",
+  "minecraft:entity": {
+    "description": {
+      "identifier": "ds:serpent",
+      "is_spawnable": false,
+      "is_summonable": true,
+      "is_experimental": false
+    },
+    "component_groups": {
+    "ds:disappear": { "minecraft:transformation": {
+          "into": "ds:disappear",
+          "delay": 0.0
+    }},
+    "sukuna_clan": {
+          "minecraft:type_family": {
+            "family": ["shikigami", "monster", "serpent", "pureshikigami", "10s_shikigami", "tamed", "familiar", "sukuna_clan"]
+          }
+       },
+       "rogue_sorcerer_clan": {
+          "minecraft:type_family": {
+            "family": ["shikigami", "monster", "serpent", "pureshikigami", "10s_shikigami", "tamed", "familiar", "rogue_sorcerer_clan"]
+          }
+       },
+       "sorcerer_clan": {
+          "minecraft:type_family": {
+            "family": ["shikigami", "monster", "serpent", "pureshikigami", "10s_shikigami", "tamed", "familiar", "sorcerer_clan"]
+          }
+       },
+       "ptrg": {}
+    },
+    "components": {
+      "minecraft:nameable": {
+      },
+      "minecraft:type_family": {
+        "family": ["shikigami", "monster", "serpent", "pureshikigami", "10s_shikigami", "tamed", "familiar"]
+      },
+      "minecraft:collision_box": {
+        "width": 0.6,
+        "height": 1.75
+      },
+      "minecraft:movement.basic": {
+      },
+      "minecraft:navigation.walk": {
+        "is_amphibious": false,
+        "can_sink": false,
+        "can_swim": true,
+        "can_walk": true,
+        "can_open_doors": false,
+        "can_pass_doors": true,
+        "can_break_doors": true,
+        "avoid_portals": true,
+        "avoid_damage_blocks": true,
+        "can_path_over_water": true
+      },
+      "minecraft:annotation.break_door": {
+      },
+      "minecraft:jump.static": {
+      },
+      "minecraft:can_climb": {
+      },
+      "minecraft:health": {
+        "value": 140,
+        "max": 140
+      },
+      "minecraft:hurt_on_condition": {
+        "damage_conditions": [
+          {
+            "filters": { "test": "in_lava", "subject": "self", "operator": "==", "value": true },
+            "cause": "lava",
+            "damage_per_tick": 4
+          }
+        ]
+      },
+      "minecraft:breathable": {
+        "total_supply": 15,
+        "suffocate_time": 0,
+        "breathes_air": true,
+        "breathes_water": true
+      },
+      "minecraft:attack": {
+        "damage": 8
+      },
+      "minecraft:movement": {
+          "value": 0.3
+        },
+        "minecraft:scale": {
+          "value": 2.2
+      },
+      "minecraft:knockback_resistance": {
+        "value": 2
+        },
+      "minecraft:loot": {
+        "table": "loot_tables/entities/sus"
+      },
+      "minecraft:is_tamed": {},
+      "minecraft:behavior.float": {
+        "priority": 0
+      },
+"minecraft:behavior.teleport_to_owner": {
+  "priority": 0,
+  "filters": {
+  "any_of": [
+  {
+    "all_of": [
+    {
+    "test": "owner_distance",
+    "operator": ">",
+    "value": 30
+    },
+    {
+    "test": "has_target",
+    "operator": "!="
+    }
+    ]
+  },
+  {
+    "all_of": [
+    {
+    "test": "owner_distance",
+    "operator": ">",
+    "value": 60
+    },
+    {
+    "test": "has_target"
+    }
+    ]
+  }
+  ]
+  }
+},
+"minecraft:behavior.owner_hurt_target": {
+  "priority": 1,
+  "within_radius": 64
+},
+"minecraft:behavior.hurt_by_target": {
+  "priority": 2,
+  "alert_same_type": true,
+  "entity_types": [
+           {
+             "filters": {
+             "all_of": [
+               { "test": "is_family", "subject": "other", "operator": "!=", "value": "10s_shikigami" },
+               { "test": "is_family", "subject": "other", "operator": "!=", "value": "tamed" }
+              ]
+             }
+           }
+  ]
+},
+"minecraft:behavior.owner_hurt_by_target": {
+  "priority": 3,
+  "within_radius": 64
+},
+      "minecraft:behavior.melee_attack": {
+        "priority": 4,
+        "speed_multiplier": 1,
+        "track_target": false
+      },
+      "minecraft:behavior.nearest_attackable_target": {
+            "priority": 5,
+            "within_radius": 64,
+            "must_see": false,
+            "reselect_targets": true,
+            "attack_owner": false,
+            "entity_types": [
+            {
+             "filters": {
+             "any_of": [
+             {
+             "all_of": [
+             {
+             "any_of": [
+               { "test": "is_family", "subject": "other", "value": "hero", "operator": "==" },
+               { "test": "is_family", "subject": "other", "value": "sorcerer", "operator": "==" },
+               { "test": "has_tag", "subject": "other", "value": "sorcerer", "operator": "==" },
+               { "test": "has_component", "subject": "other", "value": "sorcerer_clan", "operator": "==" },
+               { "test": "has_tag", "subject": "other", "operator": "==", "value": "rogue_sorcerer" },
+               { "test": "is_family", "subject": "other", "operator": "==", "value": "rogue_sorcerer" },
+               { "test": "has_component", "subject": "other", "operator": "==", "value": "rogue_sorcerer_clan" },
+               { "test": "has_tag", "subject": "other", "operator": "==", "value": "sukuna" },
+               { "test": "is_family", "subject": "other", "operator": "==", "value": "villain" },
+               { "test": "is_family", "subject": "other", "operator": "==", "value": "undead" },
+               { "test": "is_family", "subject": "other", "operator": "==", "value": "purecurse" },
+               { "test": "has_tag", "subject": "other", "operator": "==", "value": "curse" }
+               ]
+              },
+              { "test": "is_game_rule", "domain": "pvp", "value": false },
+              { "test": "has_component", "subject": "self", "operator": "==", "value": "sukuna_clan" },
+              { "test": "is_family", "subject": "other", "operator": "!=", "value": "10s_shikigami" },
+              { "test": "is_family", "subject": "other", "operator": "!=", "value": "sukuna_clan" },
+              { "test": "has_component", "subject": "other", "operator": "!=", "value": "sukuna_clan" },
+              { "test": "is_family", "subject": "other", "value": "player", "operator": "!=" },
+              { "test": "is_family", "subject": "other", "value": "projectile", "operator": "!=" },
+              { "test": "is_family", "subject": "other", "value": "despawncito", "operator": "!=" },
+              { "test": "is_family", "subject": "other", "value": "damage", "operator": "!=" },
+              { "test": "is_family", "subject": "other", "value": "motionless", "operator": "!=" }
+              ]
+             },
+             {
+             "all_of": [
+             {
+             "any_of": [
+               { "test": "is_family", "subject": "other", "value": "hero", "operator": "==" },
+               { "test": "is_family", "subject": "other", "value": "sorcerer", "operator": "==" },
+               { "test": "has_tag", "subject": "other", "value": "sorcerer", "operator": "==" },
+               { "test": "has_component", "subject": "other", "value": "sorcerer_clan", "operator": "==" },
+               { "test": "has_tag", "subject": "other", "operator": "==", "value": "rogue_sorcerer" },
+               { "test": "is_family", "subject": "other", "operator": "==", "value": "rogue_sorcerer" },
+               { "test": "has_component", "subject": "other", "operator": "==", "value": "rogue_sorcerer_clan" },
+               { "test": "has_tag", "subject": "other", "operator": "==", "value": "sukuna" },
+               { "test": "is_family", "subject": "other", "operator": "==", "value": "villain" },
+               { "test": "is_family", "subject": "other", "operator": "==", "value": "undead" },
+               { "test": "is_family", "subject": "other", "operator": "==", "value": "purecurse" },
+               { "test": "has_tag", "subject": "other", "operator": "==", "value": "curse" }
+               ]
+              },
+              { "test": "is_game_rule", "domain": "pvp", "value": false },
+              { "test": "has_component", "subject": "self", "operator": "==", "value": "rogue_sorcerer_clan" },
+              { "test": "is_family", "subject": "other", "operator": "!=", "value": "10s_shikigami" },
+              { "test": "is_family", "subject": "other", "value": "player", "operator": "!=" },
+              { "test": "is_family", "subject": "other", "value": "projectile", "operator": "!=" },
+              { "test": "is_family", "subject": "other", "value": "despawncito", "operator": "!=" },
+              { "test": "is_family", "subject": "other", "value": "damage", "operator": "!=" },
+              { "test": "is_family", "subject": "other", "value": "motionless", "operator": "!=" }
+              ]
+             },
+             {
+             "all_of": [
+             {
+             "any_of": [
+               { "test": "is_family", "subject": "other", "value": "sukuna_clan", "operator": "==" },
+               { "test": "has_component", "subject": "other", "value": "sukuna_clan", "operator": "==" },
+               { "test": "has_tag", "subject": "other", "operator": "==", "value": "rogue_sorcerer" },
+               { "test": "is_family", "subject": "other", "operator": "==", "value": "rogue_sorcerer" },
+               { "test": "has_component", "subject": "other", "operator": "==", "value": "rogue_sorcerer_clan" },
+               { "test": "has_tag", "subject": "other", "operator": "==", "value": "sukuna" },
+               { "test": "is_family", "subject": "other", "operator": "==", "value": "villain" },
+               { "test": "is_family", "subject": "other", "operator": "==", "value": "undead" },
+               { "test": "is_family", "subject": "other", "operator": "==", "value": "purecurse" },
+               { "test": "has_tag", "subject": "other", "operator": "==", "value": "curse" }
+               ]
+              },
+              { "test": "is_game_rule", "domain": "pvp", "value": false },
+              { "test": "has_component", "subject": "self", "value": "sukuna_clan", "operator": "!=" },
+              { "test": "has_component", "subject": "self", "operator": "!=", "value": "rogue_sorcerer_clan" },
+              { "test": "is_family", "subject": "other", "operator": "!=", "value": "10s_shikigami" },
+              { "test": "is_family", "subject": "other", "value": "hero", "operator": "!=" },
+               { "test": "is_family", "subject": "other", "value": "sorcerer", "operator": "!=" },
+               { "test": "has_tag", "subject": "other", "value": "sorcerer", "operator": "!=" },
+               { "test": "has_component", "subject": "other", "value": "sorcerer_clan", "operator": "!=" },
+              { "test": "is_family", "subject": "other", "value": "player", "operator": "!=" },
+              { "test": "is_family", "subject": "other", "value": "projectile", "operator": "!=" },
+              { "test": "is_family", "subject": "other", "value": "despawncito", "operator": "!=" },
+              { "test": "is_family", "subject": "other", "value": "damage", "operator": "!=" },
+              { "test": "is_family", "subject": "other", "value": "motionless", "operator": "!=" }
+              ]
+             },
+             {
+             "all_of": [
+             {
+             "any_of": [
+               { "test": "is_family", "subject": "other", "value": "hero", "operator": "==" },
+               { "test": "is_family", "subject": "other", "value": "sorcerer", "operator": "==" },
+               { "test": "has_tag", "subject": "other", "value": "sorcerer", "operator": "==" },
+               { "test": "has_component", "subject": "other", "value": "sorcerer_clan", "operator": "==" },
+               { "test": "has_tag", "subject": "other", "operator": "==", "value": "rogue_sorcerer" },
+               { "test": "is_family", "subject": "other", "operator": "==", "value": "rogue_sorcerer" },
+               { "test": "has_component", "subject": "other", "operator": "==", "value": "rogue_sorcerer_clan" },
+               { "test": "has_tag", "subject": "other", "operator": "==", "value": "sukuna" },
+               { "test": "is_family", "subject": "other", "operator": "==", "value": "villain" },
+               { "test": "is_family", "subject": "other", "operator": "==", "value": "undead" },
+               { "test": "is_family", "subject": "other", "operator": "==", "value": "purecurse" },
+               { "test": "has_tag", "subject": "other", "operator": "==", "value": "curse" }
+               ]
+              },
+              {
+              "any_of": [
+              { "test": "is_game_rule", "domain": "pvp", "value": true },
+              { "test": "has_component", "subject": "self", "operator": "==", "value": "ptrg" }
+              ]
+              },
+              { "test": "has_component", "subject": "self", "operator": "==", "value": "sukuna_clan" },
+              { "test": "is_family", "subject": "other", "operator": "!=", "value": "10s_shikigami" },
+              { "test": "is_family", "subject": "other", "operator": "!=", "value": "sukuna_clan" },
+              { "test": "has_component", "subject": "other", "operator": "!=", "value": "sukuna_clan" },
+              { "test": "is_family", "subject": "other", "value": "projectile", "operator": "!=" },
+              { "test": "is_family", "subject": "other", "value": "despawncito", "operator": "!=" },
+              { "test": "is_family", "subject": "other", "value": "damage", "operator": "!=" },
+              { "test": "is_family", "subject": "other", "value": "motionless", "operator": "!=" }
+              ]
+             },
+             {
+             "all_of": [
+             {
+             "any_of": [
+               { "test": "is_family", "subject": "other", "value": "hero", "operator": "==" },
+               { "test": "is_family", "subject": "other", "value": "sorcerer", "operator": "==" },
+               { "test": "has_tag", "subject": "other", "value": "sorcerer", "operator": "==" },
+               { "test": "has_component", "subject": "other", "value": "sorcerer_clan", "operator": "==" },
+               { "test": "has_tag", "subject": "other", "operator": "==", "value": "rogue_sorcerer" },
+               { "test": "is_family", "subject": "other", "operator": "==", "value": "rogue_sorcerer" },
+               { "test": "has_component", "subject": "other", "operator": "==", "value": "rogue_sorcerer_clan" },
+               { "test": "has_tag", "subject": "other", "operator": "==", "value": "sukuna" },
+               { "test": "is_family", "subject": "other", "operator": "==", "value": "villain" },
+               { "test": "is_family", "subject": "other", "operator": "==", "value": "undead" },
+               { "test": "is_family", "subject": "other", "operator": "==", "value": "purecurse" },
+               { "test": "has_tag", "subject": "other", "operator": "==", "value": "curse" }
+               ]
+              },
+              {
+              "any_of": [
+              { "test": "is_game_rule", "domain": "pvp", "value": true },
+              { "test": "has_component", "subject": "self", "operator": "==", "value": "ptrg" }
+              ]
+              },
+              { "test": "has_component", "subject": "self", "operator": "==", "value": "rogue_sorcerer_clan" },
+              { "test": "is_family", "subject": "other", "operator": "!=", "value": "10s_shikigami" },
+              { "test": "is_family", "subject": "other", "value": "projectile", "operator": "!=" },
+              { "test": "is_family", "subject": "other", "value": "despawncito", "operator": "!=" },
+              { "test": "is_family", "subject": "other", "value": "damage", "operator": "!=" },
+              { "test": "is_family", "subject": "other", "value": "motionless", "operator": "!=" }
+              ]
+             },
+             {
+             "all_of": [
+             {
+             "any_of": [
+               { "test": "is_family", "subject": "other", "value": "sukuna_clan", "operator": "==" },
+               { "test": "has_component", "subject": "other", "value": "sukuna_clan", "operator": "==" },
+               { "test": "has_tag", "subject": "other", "operator": "==", "value": "rogue_sorcerer" },
+               { "test": "is_family", "subject": "other", "operator": "==", "value": "rogue_sorcerer" },
+               { "test": "has_component", "subject": "other", "operator": "==", "value": "rogue_sorcerer_clan" },
+               { "test": "has_tag", "subject": "other", "operator": "==", "value": "sukuna" },
+               { "test": "is_family", "subject": "other", "operator": "==", "value": "villain" },
+               { "test": "is_family", "subject": "other", "operator": "==", "value": "undead" },
+               { "test": "is_family", "subject": "other", "operator": "==", "value": "purecurse" },
+               { "test": "has_tag", "subject": "other", "operator": "==", "value": "curse" }
+               ]
+              },
+              {
+              "any_of": [
+              { "test": "is_game_rule", "domain": "pvp", "value": true },
+              { "test": "has_component", "subject": "self", "operator": "==", "value": "ptrg" }
+              ]
+              },
+              { "test": "has_component", "subject": "self", "value": "sukuna_clan", "operator": "!=" },
+              { "test": "has_component", "subject": "self", "operator": "!=", "value": "rogue_sorcerer_clan" },
+              { "test": "is_family", "subject": "other", "operator": "!=", "value": "10s_shikigami" },
+              { "test": "is_family", "subject": "other", "value": "hero", "operator": "!=" },
+               { "test": "is_family", "subject": "other", "value": "sorcerer", "operator": "!=" },
+               { "test": "has_tag", "subject": "other", "value": "sorcerer", "operator": "!=" },
+               { "test": "has_component", "subject": "other", "value": "sorcerer_clan", "operator": "!=" },
+              { "test": "is_family", "subject": "other", "value": "projectile", "operator": "!=" },
+              { "test": "is_family", "subject": "other", "value": "despawncito", "operator": "!=" },
+              { "test": "is_family", "subject": "other", "value": "damage", "operator": "!=" },
+              { "test": "is_family", "subject": "other", "value": "motionless", "operator": "!=" }
+              ]
+             },
+             {
+             "all_of": [
+             { "test": "is_family", "subject": "other", "operator": "==", "value": "10s_shikigami" },
+               { "test": "is_family", "subject": "other", "operator": "!=", "value": "tamed" }
+             ]
+             }
+             ]
+             },
+             "max_dist": 64
+            }
+            ]
+        },
+      "minecraft:behavior.follow_owner": {
+          "priority": 6,
+          "speed_multiplier": 1.0,
+          "start_distance": 16,
+          "stop_distance": 6
+        },
+      "minecraft:behavior.random_stroll": {
+        "priority": 7,
+        "speed_multiplier": 1
+      },
+      "minecraft:behavior.look_at_player": {
+        "priority": 8,
+        "look_distance": 6,
+        "probability": 0.02
+      },
+      "minecraft:behavior.random_look_around": {
+        "priority": 8
+			},
+      "minecraft:physics": {
+      },
+      "minecraft:pushable": {
+        "is_pushable": true,
+        "is_pushable_by_piston": true
+      },
+      "minecraft:damage_sensor": { "triggers": [
+            { "on_damage": { "filters": { "all_of": [ { "test": "has_tag", "subject": "self", "operator": "==", "value": "Frames" }, { "any_of": [ { "test": "has_damage", "subject": "self", "operator": "!=", "value": "suicide" }, { "test": "has_damage", "subject": "self", "operator": "!=", "value": "override" }, { "test": "has_damage", "subject": "self", "operator": "!=", "value": "starve" }, { "test": "has_damage", "subject": "self", "operator": "!=", "value": "void" } ] } ] } }, "deals_damage": false },
+            { "on_damage": { "filters": { "all_of": [ { "test": "is_owner", "subject": "damager", "value": true, "operator": "==" } ] } }, "cause": "all", "deals_damage": false },
+            { "on_damage": { "filters": { "all_of": [ { "test": "actor_health", "subject": "self", "operator": "<=", "value": 0 } ] }, "event": "familiar_die" }, "cause": "all", "deals_damage": false }
+            ] }
+    },
+    "events": {
+      "ptrg": {
+                        "add": {"component_groups": ["ptrg"]}
+            },"familiar_spawn_sorcerer": {
+                        "add": {"component_groups": ["sorcerer_clan"]}
+            },
+            "familiar_spawn_rogue": {
+                        "add": {"component_groups": ["rogue_sorcerer_clan"]}
+            },
+            "familiar_spawn_sukuna": {
+                        "add": {"component_groups": ["sukuna_clan"]}
+            },
+            "familiar_spawn_sorcerer_ptrg": {
+                        "add": {"component_groups": ["sorcerer_clan", "ptrg"]}
+            },
+            "familiar_spawn_rogue_ptrg": {
+                        "add": {"component_groups": ["rogue_sorcerer_clan", "ptrg"]}
+            },
+            "familiar_spawn_sukuna_ptrg": {
+                        "add": {"component_groups": ["sukuna_clan", "ptrg"]}
+            },
+            "ptrg": {
+                        "add": {"component_groups": ["ptrg"]}
+            },
+      "familiar_die": {
+        "sequence": [
+            {
+                "filters": {
+                    "test": "is_game_rule",
+                    "domain": "showDeathMessages",
+                    "value": true
+                },
+                "queue_command": {
+                    "command": [
+                        "gamerule showdeathmessages false",
+                        "kill @s",
+                        "gamerule showdeathmessages true"
+                    ]
+                }
+            }
+        ]
+      },
+      "ds:disappear": {
+        "add": {
+         "component_groups": [
+         "ds:disappear"
+         ]
+        }
+      }
+    }
+  }
+}
